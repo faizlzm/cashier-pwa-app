@@ -1,11 +1,12 @@
 {
-  "name": "My Next.js PWA",
-  "short_name": "NextPWA",
-  "description": "A simple downloadable Next.js PWA",
-  "start_url": "/",
+  "name": "Kasir Pro - Solusi Kasir Modern",
+  "short_name": "Kasir Pro",
+  "description": "Aplikasi Kasir Modern untuk Bisnis Anda",
+  "start_url": "/dashboard",
   "display": "standalone",
-  "background_color": "#fd8650",
-  "theme_color": "#fd8650",
+  "orientation": "landscape",
+  "background_color": "#ffffff",
+  "theme_color": "#0f172a",
   "icons": [
     {
       "src": "/icons/icon-192x192.png",
