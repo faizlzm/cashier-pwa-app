@@ -12,6 +12,8 @@ function SuccessContent() {
   const searchParams = useSearchParams();
   const clearCart = useCartStore((state) => state.clearCart);
 
+  const code =
+    searchParams.get("code") || `TRX-${Date.now().toString().slice(-6)}`;
   const received = parseInt(searchParams.get("received") || "0");
   const change = parseInt(searchParams.get("change") || "0");
   const total = received - change;
@@ -33,9 +35,7 @@ function SuccessContent() {
           <h2 className="text-3xl font-bold text-green-600 dark:text-green-400">
             Pembayaran Berhasil!
           </h2>
-          <p className="text-muted-foreground mt-2">
-            ID Transaksi #TRX-{Date.now().toString().slice(-6)}
-          </p>
+          <p className="text-muted-foreground mt-2 font-mono">{code}</p>
         </div>
 
         <div className="w-full bg-muted/50 p-6 rounded-lg space-y-3">
@@ -47,14 +47,22 @@ function SuccessContent() {
             <span className="text-muted-foreground">Total Tagihan</span>
             <span className="font-medium">Rp {total.toLocaleString()}</span>
           </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Tunai Diterima</span>
-            <span className="font-medium">Rp {received.toLocaleString()}</span>
-          </div>
-          <div className="border-t pt-3 flex justify-between font-bold text-lg">
-            <span>Kembalian</span>
-            <span className="text-primary">Rp {change.toLocaleString()}</span>
-          </div>
+          {method === "CASH" && (
+            <>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Tunai Diterima</span>
+                <span className="font-medium">
+                  Rp {received.toLocaleString()}
+                </span>
+              </div>
+              <div className="border-t pt-3 flex justify-between font-bold text-lg">
+                <span>Kembalian</span>
+                <span className="text-primary">
+                  Rp {change.toLocaleString()}
+                </span>
+              </div>
+            </>
+          )}
         </div>
       </CardContent>
       <CardFooter className="flex flex-col gap-3 pb-8 px-8">

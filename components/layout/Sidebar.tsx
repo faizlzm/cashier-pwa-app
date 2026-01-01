@@ -15,6 +15,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 import { useState, useEffect } from "react";
+import { useAuth } from "@/lib/context/auth-context";
 
 const menuItems = [
   { icon: Home, label: "Home", href: "/dashboard" },
@@ -25,6 +26,7 @@ const menuItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { logout } = useAuth();
   const [collapsed, setCollapsed] = useState(true);
   const [isDark, setIsDark] = useState(false);
 
@@ -115,6 +117,7 @@ export function Sidebar() {
             "w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10",
             collapsed && "justify-center px-0"
           )}
+          onClick={logout}
           title={collapsed ? "Logout" : undefined}
         >
           <LogOut className="h-5 w-5" />

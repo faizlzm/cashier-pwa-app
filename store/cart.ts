@@ -1,14 +1,22 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { Product } from "@/data/products";
+import type { Category } from "@/types/api";
 
-export interface CartItem extends Product {
+export interface CartProduct {
+  id: string;
+  name: string;
+  price: number;
+  category: Category;
+  image?: string;
+}
+
+export interface CartItem extends CartProduct {
   quantity: number;
 }
 
 interface CartState {
   items: CartItem[];
-  addItem: (product: Product) => void;
+  addItem: (product: CartProduct) => void;
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;

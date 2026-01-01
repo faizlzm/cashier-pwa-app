@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Lock, Mail, Loader2 } from "lucide-react";
+import { Lock, Mail, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import {
@@ -13,19 +13,42 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/Card";
+import { useAuth } from "@/lib/context/auth-context";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
+    setError(null);
+
+    try {
+      await login(email, password);
       router.push("/dashboard");
-    }, 1000);
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "Login gagal. Periksa email dan password Anda.";
+
+      // Check for axios error response
+      if (typeof err === "object" && err !== null && "response" in err) {
+        const axiosError = err as {
+          response?: { data?: { message?: string } };
+        };
+        setError(axiosError.response?.data?.message || errorMessage);
+      } else {
+        setError(errorMessage);
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -43,12 +66,23 @@ export default function LoginPage() {
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
+          {error && (
+            <div
+              key="login-error"
+              className="flex items-center gap-2 p-3 text-sm text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400 rounded-lg animate-in fade-in duration-300"
+            >
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
           <div className="space-y-2">
             <Input
               id="email"
               type="email"
-              placeholder="Email: admin@kasirpro.com"
+              placeholder="Email"
               required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               icon={<Mail className="h-4 w-4" />}
             />
           </div>
@@ -58,6 +92,8 @@ export default function LoginPage() {
               type="password"
               placeholder="Password"
               required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               icon={<Lock className="h-4 w-4" />}
             />
           </div>

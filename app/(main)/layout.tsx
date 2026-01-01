@@ -1,12 +1,35 @@
+"use client";
+
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { OfflineIndicator } from "@/components/layout/OfflineIndicator";
+import { useAuth } from "@/lib/context/auth-context";
+import { Loader2 } from "lucide-react";
 
 export default function MainLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { isLoading, isAuthenticated } = useAuth();
+
+  // Show loading state while checking auth
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground text-sm">Memuat...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render main layout if not authenticated (redirect will happen in AuthContext)
+  if (!isAuthenticated) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <OfflineIndicator />

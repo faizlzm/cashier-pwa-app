@@ -1,26 +1,30 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   DollarSign,
   Package,
-  ShoppingCart,
+  Receipt,
   Users,
   TrendingUp,
-  Receipt,
   ArrowRight,
   Clock,
   User,
   Wallet,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { transactions } from "@/data/transactions";
-import { products } from "@/data/products";
+import { getTodayTransactions } from "@/lib/api/transactions";
+import { getProducts } from "@/lib/api/products";
+import { useAuth } from "@/lib/context/auth-context";
 import { cn } from "@/lib/utils";
+import type { Transaction, Product } from "@/types/api";
 
 // Helper for initials
 function getInitials(name: string) {
@@ -29,44 +33,70 @@ function getInitials(name: string) {
   return (words[0][0] + words[1][0]).toUpperCase();
 }
 
+interface DashboardData {
+  todayRevenue: number;
+  todayTransactions: number;
+  totalProducts: number;
+  recentTransactions: Transaction[];
+}
+
 export default function DashboardPage() {
-  // Calculate stats
-  // For demo purposes, we assume 'today' matches the mock data or we just show totals
-  const todayTransactions = transactions.filter(
-    (t) => t.date.toDateString() === new Date().toDateString()
-  );
+  const { user } = useAuth();
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Use mock total revenue for visual impact if today is empty in demo
-  const displayRevenue =
-    todayTransactions.length > 0
-      ? todayTransactions.reduce((acc, curr) => acc + curr.total, 0)
-      : 1750000;
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      setIsLoading(true);
+      setError(null);
 
-  const displayTrxCount =
-    todayTransactions.length > 0 ? todayTransactions.length : 12;
+      try {
+        // Fetch today's transactions and products in parallel
+        const [todayData, products] = await Promise.all([
+          getTodayTransactions(),
+          getProducts({ isActive: true }),
+        ]);
+
+        setData({
+          todayRevenue: todayData.summary.total,
+          todayTransactions: todayData.summary.count,
+          totalProducts: products.length,
+          recentTransactions: todayData.transactions.slice(0, 5),
+        });
+      } catch (err) {
+        console.error("Failed to fetch dashboard data:", err);
+        setError("Gagal memuat data dashboard. Silakan coba lagi.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
 
   const stats = [
     {
       label: "Pendapatan Hari Ini",
-      value: `Rp ${displayRevenue.toLocaleString("id-ID")}`,
+      value: data ? `Rp ${data.todayRevenue.toLocaleString("id-ID")}` : "-",
       icon: DollarSign,
-      trend: "+20.1% dari kemarin",
+      trend: "Hari ini",
       trendUp: true,
       color: "text-green-600",
       bg: "bg-green-100 dark:bg-green-900/20",
     },
     {
       label: "Total Transaksi",
-      value: displayTrxCount.toString(),
+      value: data ? data.todayTransactions.toString() : "-",
       icon: Receipt,
-      trend: "5 total bulan ini",
+      trend: "Hari ini",
       trendUp: true,
       color: "text-blue-600",
       bg: "bg-blue-100 dark:bg-blue-900/20",
     },
     {
       label: "Produk Aktif",
-      value: products.length.toString(),
+      value: data ? data.totalProducts.toString() : "-",
       icon: Package,
       trend: "Dalam katalog",
       trendUp: true,
@@ -75,14 +105,39 @@ export default function DashboardPage() {
     },
     {
       label: "Pelanggan",
-      value: "89",
+      value: "-",
       icon: Users,
-      trend: "+4 sejak jam terakhir",
+      trend: "Segera hadir",
       trendUp: true,
       color: "text-purple-600",
       bg: "bg-purple-100 dark:bg-purple-900/20",
     },
   ];
+
+  if (isLoading) {
+    return (
+      <div className="h-[calc(100vh-8rem)] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Memuat dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="h-[calc(100vh-8rem)] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <AlertCircle className="h-12 w-12 text-destructive" />
+          <p className="text-destructive">{error}</p>
+          <Button variant="outline" onClick={() => window.location.reload()}>
+            Coba Lagi
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -144,50 +199,63 @@ export default function DashboardPage() {
                 <Receipt className="w-5 h-5 text-muted-foreground" />
                 <CardTitle className="text-base">Transaksi Terakhir</CardTitle>
               </div>
-              <Button variant="ghost" size="sm" className="text-xs h-8">
-                Lihat Semua <ArrowRight className="ml-1 w-3 h-3" />
-              </Button>
+              <Link href="/transactions">
+                <Button variant="ghost" size="sm" className="text-xs h-8">
+                  Lihat Semua <ArrowRight className="ml-1 w-3 h-3" />
+                </Button>
+              </Link>
             </CardHeader>
             <CardContent className="p-0">
               <div className="divide-y divide-border/40">
-                {transactions.slice(0, 5).map((trx) => (
-                  <div
-                    key={trx.id}
-                    className="flex items-center justify-between p-4 hover:bg-muted/5 transition-colors group"
-                  >
-                    <div className="flex items-start gap-4">
-                      {/* Avatar/Icon based on first item */}
-                      {trx.items.length > 0 && (
-                        <div className="h-10 w-10 rounded-lg flex items-center justify-center text-sm font-bold shrink-0 bg-primary/10 text-primary">
-                          {getInitials(trx.items[0].name)}
-                        </div>
-                      )}
-                      <div className="space-y-1">
-                        <p className="text-sm font-medium leading-none truncate max-w-[200px] sm:max-w-xs">
-                          {trx.items.map((i) => i.name).join(", ")}
-                          {trx.items.length > 2 && "..."}
-                        </p>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <span className="font-mono">{trx.id}</span>
-                          <span>•</span>
-                          <span>{format(trx.date, "HH:mm")}</span>
+                {data?.recentTransactions.length === 0 ? (
+                  <div className="p-8 text-center text-muted-foreground">
+                    <Receipt className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                    <p>Belum ada transaksi hari ini</p>
+                  </div>
+                ) : (
+                  data?.recentTransactions.map((trx) => (
+                    <div
+                      key={trx.id}
+                      className="flex items-center justify-between p-4 hover:bg-muted/5 transition-colors group"
+                    >
+                      <div className="flex items-start gap-4">
+                        {/* Avatar/Icon based on first item */}
+                        {trx.items.length > 0 && (
+                          <div className="h-10 w-10 rounded-lg flex items-center justify-center text-sm font-bold shrink-0 bg-primary/10 text-primary">
+                            {getInitials(trx.items[0].productName)}
+                          </div>
+                        )}
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium leading-none truncate max-w-[200px] sm:max-w-xs">
+                            {trx.items.map((i) => i.productName).join(", ")}
+                            {trx.items.length > 2 && "..."}
+                          </p>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <span className="font-mono">
+                              {trx.transactionCode}
+                            </span>
+                            <span>•</span>
+                            <span>
+                              {format(new Date(trx.createdAt), "HH:mm")}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="flex flex-col items-end gap-1">
-                      <span className="font-bold text-sm">
-                        Rp {trx.total.toLocaleString("id-ID")}
-                      </span>
-                      <Badge
-                        variant="outline"
-                        className="text-[10px] px-1.5 py-0 h-5 bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800"
-                      >
-                        Lunas
-                      </Badge>
+                      <div className="flex flex-col items-end gap-1">
+                        <span className="font-bold text-sm">
+                          Rp {trx.total.toLocaleString("id-ID")}
+                        </span>
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] px-1.5 py-0 h-5 bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800"
+                        >
+                          Lunas
+                        </Badge>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>
@@ -201,7 +269,7 @@ export default function DashboardPage() {
               <div className="relative z-10 flex flex-col h-full justify-between min-h-[140px]">
                 <div className="flex justify-between items-start">
                   <div className="p-3 bg-white/10 rounded-lg backdrop-blur-sm">
-                    <ShoppingCart className="w-8 h-8 text-white" />
+                    <Receipt className="w-8 h-8 text-white" />
                   </div>
                   <ArrowRight className="w-6 h-6 text-white/70 group-hover:translate-x-1 transition-transform" />
                 </div>
@@ -250,7 +318,9 @@ export default function DashboardPage() {
                     <p className="text-xs text-muted-foreground">
                       Kasir Bertugas
                     </p>
-                    <p className="text-sm font-semibold">Admin User</p>
+                    <p className="text-sm font-semibold">
+                      {user?.name || "Kasir"}
+                    </p>
                   </div>
                 </div>
               </div>

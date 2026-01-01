@@ -1,15 +1,23 @@
 "use client";
 
-import { useState } from "react";
-import { Search, ShoppingCart, Trash2, Plus, Minus } from "lucide-react";
+import { useState, useEffect } from "react";
+import {
+  Search,
+  ShoppingCart,
+  Trash2,
+  Plus,
+  Minus,
+  Loader2,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
-import { products } from "@/data/products";
+import { getProducts } from "@/lib/api/products";
 import { useCartStore } from "@/store/cart";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/utils";
+import type { Product, Category } from "@/types/api";
 
 // Helper for initials
 function getInitials(name: string) {
@@ -18,20 +26,14 @@ function getInitials(name: string) {
   return (words[0][0] + words[1][0]).toUpperCase();
 }
 
-// Helper to generate consistent color from string
-function stringToColor(str: string) {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = str.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const c = (hash & 0x00ffffff).toString(16).toUpperCase();
-  return "#" + "00000".substring(0, 6 - c.length) + c;
-}
-
 export default function POSPage() {
   const router = useRouter();
   const [search, setSearch] = useState("");
-  const [category, setCategory] = useState<"ALL" | "FOOD" | "DRINK">("ALL");
+  const [category, setCategory] = useState<"ALL" | Category>("ALL");
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const {
     items,
     addItem,
@@ -43,6 +45,25 @@ export default function POSPage() {
     clearCart,
   } = useCartStore();
 
+  // Fetch products from API
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const data = await getProducts({ isActive: true });
+        setProducts(data);
+      } catch (err) {
+        console.error("Failed to fetch products:", err);
+        setError("Gagal memuat produk. Silakan coba lagi.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
   const filteredProducts = products
     .filter((product) => {
       const matchesSearch = product.name
@@ -53,6 +74,16 @@ export default function POSPage() {
       return matchesSearch && matchesCategory;
     })
     .sort((a, b) => a.name.localeCompare(b.name));
+
+  const handleAddItem = (product: Product) => {
+    addItem({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      category: product.category,
+      image: product.imageUrl || undefined,
+    });
+  };
 
   return (
     <div className="flex h-[calc(100vh-6rem)] gap-4">
@@ -93,46 +124,77 @@ export default function POSPage() {
 
         {/* Product List */}
         <div className="flex-1 overflow-y-auto pr-2 pb-2 space-y-3">
-          {filteredProducts.map((product) => {
-            // Generate a pastel-like color for background
-            const hue =
-              Math.abs(
-                product.name.split("").reduce((a, b) => a + b.charCodeAt(0), 0)
-              ) % 360;
-            const bgColor = `hsl(${hue}, 70%, 90%)`;
-            const textColor = `hsl(${hue}, 80%, 30%)`;
-
-            return (
-              <Card
-                key={product.id}
-                className="cursor-pointer hover:border-primary transition-all group overflow-hidden flex items-center p-3 gap-4"
-                onClick={() => addItem(product)}
+          {isLoading ? (
+            <div className="h-full flex flex-col items-center justify-center text-muted-foreground">
+              <Loader2 className="h-8 w-8 animate-spin mb-4" />
+              <p>Memuat produk...</p>
+            </div>
+          ) : error ? (
+            <div className="h-full flex flex-col items-center justify-center text-muted-foreground">
+              <p className="text-destructive">{error}</p>
+              <Button
+                variant="outline"
+                className="mt-4"
+                onClick={() => window.location.reload()}
               >
-                <div
-                  className="h-14 w-14 rounded-lg flex items-center justify-center text-lg font-bold shrink-0"
-                  style={{ backgroundColor: bgColor, color: textColor }}
-                >
-                  {getInitials(product.name)}
-                </div>
+                Coba Lagi
+              </Button>
+            </div>
+          ) : filteredProducts.length === 0 ? (
+            <div className="h-full flex flex-col items-center justify-center text-muted-foreground">
+              <p>Tidak ada produk ditemukan</p>
+            </div>
+          ) : (
+            filteredProducts.map((product) => {
+              // Generate a pastel-like color for background
+              const hue =
+                Math.abs(
+                  product.name
+                    .split("")
+                    .reduce((a, b) => a + b.charCodeAt(0), 0)
+                ) % 360;
+              const bgColor = `hsl(${hue}, 70%, 90%)`;
+              const textColor = `hsl(${hue}, 80%, 30%)`;
 
-                <div className="flex-1">
-                  <h3 className="font-medium text-lg text-slate-950 dark:text-slate-100">
-                    {product.name}
-                  </h3>
-                  <p className="text-sm font-bold text-blue-600 dark:text-blue-400">
-                    Rp {product.price.toLocaleString()}
-                  </p>
-                </div>
-
-                <Button
-                  size="icon"
-                  className="h-10 w-10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+              return (
+                <Card
+                  key={product.id}
+                  className="cursor-pointer hover:border-primary transition-all group overflow-hidden flex items-center p-3 gap-4"
+                  onClick={() => handleAddItem(product)}
                 >
-                  <Plus className="h-6 w-6" />
-                </Button>
-              </Card>
-            );
-          })}
+                  <div
+                    className="h-14 w-14 rounded-lg flex items-center justify-center text-lg font-bold shrink-0"
+                    style={{ backgroundColor: bgColor, color: textColor }}
+                  >
+                    {getInitials(product.name)}
+                  </div>
+
+                  <div className="flex-1">
+                    <h3 className="font-medium text-lg text-slate-950 dark:text-slate-100">
+                      {product.name}
+                    </h3>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-bold text-blue-600 dark:text-blue-400">
+                        Rp {product.price.toLocaleString()}
+                      </p>
+                      {product.stock <= product.minStock && (
+                        <Badge variant="destructive" className="text-xs">
+                          Stok: {product.stock}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+
+                  <Button
+                    size="icon"
+                    className="h-10 w-10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <Plus className="h-6 w-6" />
+                  </Button>
+                </Card>
+              );
+            })
+          )}
         </div>
       </div>
 

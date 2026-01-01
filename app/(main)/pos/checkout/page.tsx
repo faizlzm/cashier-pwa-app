@@ -9,13 +9,16 @@ import {
   Delete,
   Receipt,
   Wallet,
+  AlertCircle,
 } from "lucide-react";
 import { useCartStore } from "@/store/cart";
+import { createTransaction } from "@/lib/api/transactions";
 import { Button } from "@/components/ui/Button";
 import { Card, CardHeader, CardContent } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/utils";
+import type { PaymentMethod, CreateTransactionRequest } from "@/types/api";
 
 // Helper for initials (Consistent with POS page)
 function getInitials(name: string) {
@@ -26,17 +29,19 @@ function getInitials(name: string) {
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { items, subtotal, tax, discount, total } = useCartStore();
+  const { items, subtotal, tax, discount, total, clearCart } = useCartStore();
   const [cashReceived, setCashReceived] = useState<number>(0);
-  const [paymentMethod, setPaymentMethod] = useState<"CASH" | "QRIS">("CASH");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("CASH");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [paymentCompleted, setPaymentCompleted] = useState(false);
 
-  // Redirect if cart is empty
+  // Redirect if cart is empty (but not if payment just completed)
   useEffect(() => {
-    if (items.length === 0) {
+    if (items.length === 0 && !isProcessing && !paymentCompleted) {
       router.push("/pos");
     }
-  }, [items, router]);
+  }, [items, router, isProcessing, paymentCompleted]);
 
   const totalAmount = total();
   const change = Math.max(0, cashReceived - totalAmount);
@@ -66,16 +71,44 @@ export default function CheckoutPage() {
     }
   };
 
-  const handlePayment = () => {
+  const handlePayment = async () => {
     if (!isSufficient) return;
     setIsProcessing(true);
+    setError(null);
 
-    setTimeout(() => {
+    try {
+      // Prepare transaction data
+      const transactionData: CreateTransactionRequest = {
+        items: items.map((item) => ({
+          productId: item.id,
+          productName: item.name,
+          quantity: item.quantity,
+          price: item.price,
+          category: item.category,
+        })),
+        subtotal: subtotal(),
+        tax: Math.round(tax()),
+        discount: discount(),
+        total: Math.round(totalAmount),
+        paymentMethod: paymentMethod,
+      };
+
+      // Create transaction via API
+      const transaction = await createTransaction(transactionData);
+
+      // Mark payment as completed to prevent redirect to /pos
+      setPaymentCompleted(true);
+
+      // Clear cart and redirect to success
+      clearCart();
       router.push(
-        `/pos/success?received=${cashReceived}&change=${change}&method=${paymentMethod}`
+        `/pos/success?code=${transaction.transactionCode}&received=${cashReceived}&change=${change}&method=${paymentMethod}`
       );
+    } catch (err) {
+      console.error("Transaction failed:", err);
+      setError("Gagal membuat transaksi. Silakan coba lagi.");
       setIsProcessing(false);
-    }, 1500);
+    }
   };
 
   // Quick cash suggestions based on total
@@ -193,7 +226,7 @@ export default function CheckoutPage() {
                 <div className="flex justify-between text-muted-foreground">
                   <span>Pajak (11%)</span>
                   <span className="tabular-nums">
-                    Rp {tax().toLocaleString()}
+                    Rp {Math.round(tax()).toLocaleString()}
                   </span>
                 </div>
                 {discount() > 0 && (
@@ -211,7 +244,7 @@ export default function CheckoutPage() {
               <div className="flex justify-between items-end">
                 <span className="text-base font-bold">Total Pembayaran</span>
                 <span className="text-2xl font-extrabold text-primary tabular-nums tracking-tight">
-                  Rp {total().toLocaleString()}
+                  Rp {Math.round(totalAmount).toLocaleString()}
                 </span>
               </div>
             </div>
@@ -227,7 +260,7 @@ export default function CheckoutPage() {
                 Total Tagihan
               </span>
               <div className="text-4xl font-black text-primary tabular-nums">
-                Rp {total().toLocaleString()}
+                Rp {Math.round(totalAmount).toLocaleString()}
               </div>
             </div>
 
@@ -259,6 +292,13 @@ export default function CheckoutPage() {
             </div>
 
             <CardContent className="flex-1 p-4 flex flex-col gap-4 overflow-hidden min-h-0">
+              {error && (
+                <div className="flex items-center gap-2 p-3 text-sm text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400 rounded-lg shrink-0">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <span>{error}</span>
+                </div>
+              )}
+
               {paymentMethod === "CASH" ? (
                 <>
                   {/* Input Display */}
@@ -375,7 +415,7 @@ export default function CheckoutPage() {
                 {isProcessing
                   ? "Memproses..."
                   : paymentMethod === "CASH"
-                  ? `Bayar Rp ${total().toLocaleString()}`
+                  ? `Bayar Rp ${Math.round(totalAmount).toLocaleString()}`
                   : "Cek Status Pembayaran"}
               </Button>
             </div>

@@ -11,9 +11,10 @@ import {
   CardDescription,
 } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
-import { currentUser } from "@/data/user";
+import { useAuth } from "@/lib/context/auth-context";
 
 export default function SettingsPage() {
+  const { user, logout } = useAuth();
   const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
@@ -47,19 +48,15 @@ export default function SettingsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Nama Lengkap</label>
-              <Input value={currentUser.name} readOnly className="bg-muted" />
+              <Input value={user?.name || ""} readOnly className="bg-muted" />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Email</label>
-              <Input value={currentUser.email} readOnly className="bg-muted" />
+              <Input value={user?.email || ""} readOnly className="bg-muted" />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Role</label>
-              <Input
-                value={currentUser.role.toUpperCase()}
-                readOnly
-                className="bg-muted"
-              />
+              <Input value={user?.role || ""} readOnly className="bg-muted" />
             </div>
           </div>
         </CardContent>
@@ -113,7 +110,11 @@ export default function SettingsPage() {
       </Card>
 
       <div className="pt-4">
-        <Button variant="destructive" className="w-full md:w-auto">
+        <Button
+          variant="destructive"
+          className="w-full md:w-auto"
+          onClick={logout}
+        >
           <LogOut className="mr-2 h-4 w-4" /> Keluar Aplikasi
         </Button>
       </div>
