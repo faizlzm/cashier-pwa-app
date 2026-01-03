@@ -7,8 +7,48 @@ import type {
   TodayTransactionsResponse,
   PaginatedResponse,
 } from "@/types/api";
+import { queueTransaction } from "@/lib/offline/offline-store";
 
+/**
+ * Create a transaction - queues offline if not connected
+ */
 export async function createTransaction(
+  data: CreateTransactionRequest
+): Promise<Transaction> {
+  // Check if online
+  const isOnline = typeof navigator !== "undefined" ? navigator.onLine : true;
+
+  if (!isOnline) {
+    // Queue transaction for later sync
+    console.log("Offline: Queuing transaction for later sync");
+    return queueTransaction(data);
+  }
+
+  try {
+    const response = await api.post<ApiResponse<Transaction>>(
+      "/transactions",
+      data
+    );
+    return response.data.data;
+  } catch (error) {
+    // If network error, queue the transaction
+    if (
+      error instanceof Error &&
+      (error.message.includes("Network Error") ||
+        error.message.includes("Failed to fetch"))
+    ) {
+      console.log("Network error: Queuing transaction for later sync");
+      return queueTransaction(data);
+    }
+    throw error;
+  }
+}
+
+/**
+ * Directly sync a transaction to the server - used for syncing pending transactions
+ * This bypasses the offline queue logic to prevent re-queuing during sync
+ */
+export async function syncTransactionDirect(
   data: CreateTransactionRequest
 ): Promise<Transaction> {
   const response = await api.post<ApiResponse<Transaction>>(
@@ -18,9 +58,7 @@ export async function createTransaction(
   return response.data.data;
 }
 
-export async function getTransactions(
-  filters?: TransactionFilters
-): Promise<{
+export async function getTransactions(filters?: TransactionFilters): Promise<{
   data: Transaction[];
   pagination?: PaginatedResponse<Transaction>["pagination"];
 }> {

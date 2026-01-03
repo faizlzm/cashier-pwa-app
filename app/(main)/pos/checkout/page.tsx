@@ -101,7 +101,10 @@ export default function CheckoutPage() {
 
       // Clear cart and redirect to success
       clearCart();
-      router.push(
+
+      // Use replace instead of push for better PWA standalone mode compatibility
+      // This avoids navigation issues when running as installed PWA
+      router.replace(
         `/pos/success?code=${transaction.transactionCode}&received=${cashReceived}&change=${change}&method=${paymentMethod}`
       );
     } catch (err) {

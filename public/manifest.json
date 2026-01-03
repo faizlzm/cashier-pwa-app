@@ -1,12 +1,32 @@
 {
-  "name": "Kasir Pro - Solusi Kasir Modern",
-  "short_name": "Kasir Pro",
-  "description": "Aplikasi Kasir Modern untuk Bisnis Anda",
+  "name": "Kasir Skripsi - Prototype Aplikasi Skripsi",
+  "short_name": "Kasir Skripsi",
+  "description": "Aplikasi Kasir PWA untuk keperluan riset skripsi",
   "start_url": "/dashboard",
   "display": "standalone",
   "orientation": "landscape",
   "background_color": "#ffffff",
   "theme_color": "#0f172a",
+  "scope": "/",
+  "id": "/",
+  "categories": ["business", "finance"],
+  "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "Point of Sale",
+      "short_name": "POS",
+      "description": "Buka halaman kasir",
+      "url": "/pos",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Riwayat Transaksi",
+      "short_name": "Transaksi",
+      "description": "Lihat riwayat transaksi",
+      "url": "/transactions",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+    }
+  ],
   "icons": [
     {
       "src": "/icons/icon-192x192.png",
@@ -17,6 +37,12 @@
       "src": "/icons/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
