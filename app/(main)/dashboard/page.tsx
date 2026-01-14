@@ -6,7 +6,6 @@ import {
   DollarSign,
   Package,
   Receipt,
-  Users,
   TrendingUp,
   ArrowRight,
   Clock,
@@ -14,6 +13,8 @@ import {
   Wallet,
   Loader2,
   AlertCircle,
+  Wifi,
+  WifiOff,
 } from "lucide-react";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
@@ -45,6 +46,23 @@ export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isOnline, setIsOnline] = useState(true);
+
+  // Track online/offline status
+  useEffect(() => {
+    setIsOnline(navigator.onLine);
+
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -104,13 +122,15 @@ export default function DashboardPage() {
       bg: "bg-orange-100 dark:bg-orange-900/20",
     },
     {
-      label: "Pelanggan",
-      value: "-",
-      icon: Users,
-      trend: "Segera hadir",
-      trendUp: true,
-      color: "text-purple-600",
-      bg: "bg-purple-100 dark:bg-purple-900/20",
+      label: "Status Koneksi",
+      value: isOnline ? "Online" : "Offline",
+      icon: isOnline ? Wifi : WifiOff,
+      trend: isOnline ? "Terhubung ke server" : "Mode offline aktif",
+      trendUp: isOnline,
+      color: isOnline ? "text-green-600" : "text-red-600",
+      bg: isOnline
+        ? "bg-green-100 dark:bg-green-900/20"
+        : "bg-red-100 dark:bg-red-900/20",
     },
   ];
 
