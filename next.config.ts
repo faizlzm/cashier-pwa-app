@@ -16,7 +16,7 @@ const withPWA = withPWAInit({
     runtimeCaching: [
       {
         // Cache products API for offline access
-        urlPattern: /\/api\/products/,
+        urlPattern: /.*\/api\/products.*/,
         handler: "StaleWhileRevalidate",
         options: {
           cacheName: "api-products-cache",
@@ -28,7 +28,7 @@ const withPWA = withPWAInit({
       },
       {
         // Cache transactions list (read-only)
-        urlPattern: /\/api\/transactions(?!\/(create|$))/,
+        urlPattern: /.*\/api\/transactions(?!\/(create|$)).*/,
         handler: "NetworkFirst",
         options: {
           cacheName: "api-transactions-cache",
@@ -41,7 +41,7 @@ const withPWA = withPWAInit({
       },
       {
         // Auth endpoints - always network only for security
-        urlPattern: /\/api\/auth/,
+        urlPattern: /.*\/api\/auth.*/,
         handler: "NetworkOnly",
       },
     ],
