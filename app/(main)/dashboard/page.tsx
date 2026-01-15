@@ -160,48 +160,54 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <div className="space-y-4 sm:space-y-6 animate-in fade-in duration-500">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-          <p className="text-muted-foreground text-sm mt-1">
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
+            Dashboard
+          </h2>
+          <p className="text-muted-foreground text-xs sm:text-sm mt-0.5 sm:mt-1">
             Ringkasan aktivitas bisnis Anda hari ini
           </p>
         </div>
-        <div className="flex items-center gap-2 bg-card border px-4 py-2 rounded-full shadow-sm">
-          <Clock className="w-4 h-4 text-muted-foreground" />
-          <span className="text-sm font-medium">
+        <div className="flex items-center gap-2 bg-card border px-3 sm:px-4 py-1.5 sm:py-2 rounded-full shadow-sm self-start sm:self-auto">
+          <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" />
+          <span className="text-xs sm:text-sm font-medium">
             {format(new Date(), "EEEE, d MMMM yyyy", { locale: id })}
           </span>
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {/* Stats Grid - 2 columns on mobile */}
+      <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4">
         {stats.map((stat, index) => (
           <Card
             key={index}
             className="border-border/60 shadow-sm hover:shadow-md transition-shadow duration-200"
           >
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between space-y-0 pb-2">
-                <p className="text-sm font-medium text-muted-foreground">
+            <CardContent className="p-3 sm:p-6">
+              <div className="flex items-center justify-between space-y-0 pb-1 sm:pb-2">
+                <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate pr-2">
                   {stat.label}
                 </p>
-                <div className={cn("p-2 rounded-full", stat.bg)}>
-                  <stat.icon className={cn("h-4 w-4", stat.color)} />
+                <div
+                  className={cn("p-1.5 sm:p-2 rounded-full shrink-0", stat.bg)}
+                >
+                  <stat.icon
+                    className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", stat.color)}
+                  />
                 </div>
               </div>
-              <div className="flex flex-col mt-3 gap-1">
-                <span className="text-2xl font-bold tracking-tight">
+              <div className="flex flex-col mt-2 sm:mt-3 gap-0.5 sm:gap-1">
+                <span className="text-lg sm:text-2xl font-bold tracking-tight truncate">
                   {stat.value}
                 </span>
-                <p className="text-xs text-muted-foreground flex items-center">
+                <p className="text-[10px] sm:text-xs text-muted-foreground flex items-center">
                   {stat.trendUp && (
-                    <TrendingUp className="h-3 w-3 mr-1 text-green-500" />
+                    <TrendingUp className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1 text-green-500" />
                   )}
-                  {stat.trend}
+                  <span className="truncate">{stat.trend}</span>
                 </p>
               </div>
             </CardContent>
@@ -209,12 +215,12 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      {/* Main Content Grid */}
-      <div className="grid gap-6 md:grid-cols-12">
-        {/* Left Column: Recent Transactions (Span 7) */}
-        <div className="col-span-12 lg:col-span-7 flex flex-col gap-6">
-          <Card className="h-full border-border/60 shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between px-6 py-4 border-b bg-muted/5">
+      {/* Main Content Grid - Stack on mobile */}
+      <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-12">
+        {/* Left Column: Recent Transactions - show second on mobile */}
+        <div className="col-span-1 lg:col-span-7 flex flex-col gap-4 sm:gap-6 order-2 lg:order-1">
+          <Card className="border-border/60 shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b bg-muted/5">
               <div className="flex items-center gap-2">
                 <Receipt className="w-5 h-5 text-muted-foreground" />
                 <CardTitle className="text-base">Transaksi Terakhir</CardTitle>
@@ -281,8 +287,8 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        {/* Right Column: Quick Action & Shift (Span 5) */}
-        <div className="col-span-12 lg:col-span-5 flex flex-col gap-6">
+        {/* Right Column: Quick Action & Shift - show first on mobile */}
+        <div className="col-span-1 lg:col-span-5 flex flex-col gap-4 sm:gap-6 order-1 lg:order-2">
           {/* Quick Action Card */}
           <Link href="/pos" className="group">
             <div className="bg-linear-to-br from-primary to-blue-600 rounded-xl p-6 text-white shadow-lg shadow-primary/25 transition-all transform hover:scale-[1.02] hover:shadow-xl relative overflow-hidden">

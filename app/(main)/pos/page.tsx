@@ -8,6 +8,7 @@ import {
   Plus,
   Minus,
   Loader2,
+  X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { getProducts } from "@/lib/api/products";
@@ -16,6 +17,7 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { useResponsive } from "@/hooks/useResponsive";
 import { cn } from "@/lib/utils";
 import type { Product, Category } from "@/types/api";
 
@@ -26,13 +28,25 @@ function getInitials(name: string) {
   return (words[0][0] + words[1][0]).toUpperCase();
 }
 
+// Helper for product color
+function getProductColor(name: string) {
+  const hue =
+    Math.abs(name.split("").reduce((a, b) => a + b.charCodeAt(0), 0)) % 360;
+  return {
+    bg: `hsl(${hue}, 70%, 90%)`,
+    text: `hsl(${hue}, 80%, 30%)`,
+  };
+}
+
 export default function POSPage() {
   const router = useRouter();
+  const { isMobile } = useResponsive();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<"ALL" | Category>("ALL");
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showCart, setShowCart] = useState(false);
 
   const {
     items,
@@ -44,6 +58,8 @@ export default function POSPage() {
     total,
     clearCart,
   } = useCartStore();
+
+  const itemCount = items.reduce((a, b) => a + b.quantity, 0);
 
   // Fetch products from API
   useEffect(() => {
@@ -85,12 +101,168 @@ export default function POSPage() {
     });
   };
 
+  // Shared cart content component
+  const CartContent = ({ compact = false }: { compact?: boolean }) => (
+    <>
+      {/* Cart Header */}
+      <div
+        className={cn(
+          "flex justify-between items-center bg-muted/30",
+          compact ? "p-3 border-b" : "p-4 border-b rounded-t-lg"
+        )}
+      >
+        <div className="flex items-center gap-2">
+          <ShoppingCart className="h-5 w-5" />
+          <h2 className="font-semibold">Keranjang</h2>
+          <Badge variant="secondary" className="ml-1">
+            {itemCount}
+          </Badge>
+        </div>
+        <div className="flex items-center gap-1">
+          {items.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => clearCart()}
+              className="text-destructive hover:text-destructive h-8 w-8 p-0"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
+          {isMobile && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowCart(false)}
+              className="h-8 w-8 p-0"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Cart Items */}
+      <div
+        className={cn(
+          "flex-1 overflow-y-auto space-y-3",
+          compact ? "p-3" : "p-4"
+        )}
+      >
+        {items.length === 0 ? (
+          <div className="h-full flex flex-col items-center justify-center text-muted-foreground space-y-2 py-8">
+            <ShoppingCart className="h-12 w-12 opacity-20" />
+            <p className="text-sm">Keranjang kosong</p>
+          </div>
+        ) : (
+          items.map((item) => (
+            <div
+              key={item.id}
+              className="flex gap-3 items-start animate-in slide-in-from-right-2 duration-300"
+            >
+              <div
+                className={cn(
+                  "rounded-md flex items-center justify-center shrink-0 text-xs font-bold bg-muted",
+                  compact ? "h-10 w-10" : "h-12 w-12"
+                )}
+              >
+                {getInitials(item.name)}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4
+                  className={cn("font-medium truncate", compact && "text-sm")}
+                >
+                  {item.name}
+                </h4>
+                <p className="text-xs text-blue-600 dark:text-blue-400 font-semibold">
+                  Rp {item.price.toLocaleString()}
+                </p>
+                <div className="flex items-center gap-2 mt-1.5">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                  >
+                    <Minus className="h-3 w-3" />
+                  </Button>
+                  <span className="text-sm w-4 text-center">
+                    {item.quantity}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                  >
+                    <Plus className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="font-medium text-sm">
+                  Rp {(item.price * item.quantity).toLocaleString()}
+                </p>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 text-destructive/50 hover:text-destructive mt-1"
+                  onClick={() => removeItem(item.id)}
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Cart Footer */}
+      <div
+        className={cn(
+          "bg-muted/30 border-t space-y-2 safe-bottom",
+          compact ? "p-3" : "p-4 rounded-b-lg"
+        )}
+      >
+        <div className="space-y-1 text-sm">
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Subtotal</span>
+            <span>Rp {subtotal().toLocaleString()}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">PPN (11%)</span>
+            <span>Rp {tax().toLocaleString()}</span>
+          </div>
+          <div className="flex justify-between text-base font-bold border-t pt-2 mt-2">
+            <span>Total</span>
+            <span>Rp {total().toLocaleString()}</span>
+          </div>
+        </div>
+        <Button
+          className="w-full h-11"
+          size="lg"
+          disabled={items.length === 0}
+          onClick={() => router.push("/pos/checkout")}
+        >
+          Checkout
+        </Button>
+      </div>
+    </>
+  );
+
   return (
-    <div className="flex h-[calc(100vh-6rem)] gap-4">
-      {/* Product List Section (Left) */}
-      <div className="flex-1 flex flex-col h-full gap-4">
+    <div
+      className={cn(
+        "flex gap-2 sm:gap-4",
+        isMobile
+          ? "flex-col h-[calc(100vh-8rem)]"
+          : "flex-row h-[calc(100vh-6rem)]"
+      )}
+    >
+      {/* Product List Section */}
+      <div className="flex-1 flex flex-col h-full gap-2 sm:gap-4 min-h-0">
         {/* Search & Filter Bar */}
-        <div className="flex gap-4 items-center">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
           <div className="flex-1">
             <Input
               placeholder="Cari produk..."
@@ -100,22 +272,25 @@ export default function POSPage() {
               className="bg-card"
             />
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-1 scrollbar-hide">
             <Button
               variant={category === "ALL" ? "default" : "outline"}
               onClick={() => setCategory("ALL")}
+              className="shrink-0 text-xs sm:text-sm h-9 sm:h-10 px-3 sm:px-4"
             >
               Semua
             </Button>
             <Button
               variant={category === "FOOD" ? "default" : "outline"}
               onClick={() => setCategory("FOOD")}
+              className="shrink-0 text-xs sm:text-sm h-9 sm:h-10 px-3 sm:px-4"
             >
               Makanan
             </Button>
             <Button
               variant={category === "DRINK" ? "default" : "outline"}
               onClick={() => setCategory("DRINK")}
+              className="shrink-0 text-xs sm:text-sm h-9 sm:h-10 px-3 sm:px-4"
             >
               Minuman
             </Button>
@@ -123,7 +298,12 @@ export default function POSPage() {
         </div>
 
         {/* Product List */}
-        <div className="flex-1 overflow-y-auto pr-2 pb-2 space-y-3">
+        <div
+          className={cn(
+            "flex-1 overflow-y-auto space-y-2 sm:space-y-3 min-h-0",
+            isMobile ? "pb-20" : "pr-2 pb-2"
+          )}
+        >
           {isLoading ? (
             <div className="h-full flex flex-col items-center justify-center text-muted-foreground">
               <Loader2 className="h-8 w-8 animate-spin mb-4" />
@@ -146,31 +326,34 @@ export default function POSPage() {
             </div>
           ) : (
             filteredProducts.map((product) => {
-              // Generate a pastel-like color for background
-              const hue =
-                Math.abs(
-                  product.name
-                    .split("")
-                    .reduce((a, b) => a + b.charCodeAt(0), 0)
-                ) % 360;
-              const bgColor = `hsl(${hue}, 70%, 90%)`;
-              const textColor = `hsl(${hue}, 80%, 30%)`;
+              const colors = getProductColor(product.name);
 
               return (
                 <Card
                   key={product.id}
-                  className="cursor-pointer hover:border-primary transition-all group overflow-hidden flex items-center p-3 gap-4"
+                  className={cn(
+                    "cursor-pointer hover:border-primary transition-all group overflow-hidden flex items-center gap-3",
+                    isMobile ? "p-2.5" : "p-3 gap-4"
+                  )}
                   onClick={() => handleAddItem(product)}
                 >
                   <div
-                    className="h-14 w-14 rounded-lg flex items-center justify-center text-lg font-bold shrink-0"
-                    style={{ backgroundColor: bgColor, color: textColor }}
+                    className={cn(
+                      "rounded-lg flex items-center justify-center font-bold shrink-0",
+                      isMobile ? "h-12 w-12 text-base" : "h-14 w-14 text-lg"
+                    )}
+                    style={{ backgroundColor: colors.bg, color: colors.text }}
                   >
                     {getInitials(product.name)}
                   </div>
 
-                  <div className="flex-1">
-                    <h3 className="font-medium text-lg text-slate-950 dark:text-slate-100">
+                  <div className="flex-1 min-w-0">
+                    <h3
+                      className={cn(
+                        "font-medium text-slate-950 dark:text-slate-100 truncate",
+                        isMobile ? "text-base" : "text-lg"
+                      )}
+                    >
                       {product.name}
                     </h3>
                     <div className="flex items-center gap-2">
@@ -187,9 +370,14 @@ export default function POSPage() {
 
                   <Button
                     size="icon"
-                    className="h-10 w-10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    className={cn(
+                      "rounded-full transition-opacity shrink-0",
+                      isMobile
+                        ? "h-9 w-9 opacity-100"
+                        : "h-10 w-10 opacity-0 group-hover:opacity-100"
+                    )}
                   >
-                    <Plus className="h-6 w-6" />
+                    <Plus className={isMobile ? "h-5 w-5" : "h-6 w-6"} />
                   </Button>
                 </Card>
               );
@@ -198,113 +386,47 @@ export default function POSPage() {
         </div>
       </div>
 
-      {/* Cart Section (Right) */}
-      <div className="w-[400px] flex flex-col h-full bg-card rounded-lg border shadow-sm">
-        <div className="p-4 border-b flex justify-between items-center bg-muted/30 rounded-t-lg">
+      {/* Desktop Cart Sidebar */}
+      {!isMobile && (
+        <div className="w-[340px] lg:w-[380px] flex flex-col h-full bg-card rounded-lg border shadow-sm">
+          <CartContent />
+        </div>
+      )}
+
+      {/* Mobile Floating Cart Button */}
+      {isMobile && (
+        <button
+          onClick={() => setShowCart(true)}
+          className="fixed bottom-4 left-3 right-3 z-40 bg-primary text-primary-foreground rounded-full py-3 px-5 shadow-lg flex items-center justify-between touch-target"
+          style={{ boxShadow: "0 4px 20px rgba(59, 130, 246, 0.3)" }}
+        >
           <div className="flex items-center gap-2">
             <ShoppingCart className="h-5 w-5" />
-            <h2 className="font-semibold">Keranjang</h2>
-            <Badge variant="secondary" className="ml-1">
-              {items.reduce((a, b) => a + b.quantity, 0)}
-            </Badge>
+            <span className="font-medium">Keranjang ({itemCount})</span>
           </div>
-          {items.length > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => clearCart()}
-              className="text-destructive hover:text-destructive"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
+          <span className="font-bold">Rp {total().toLocaleString()}</span>
+        </button>
+      )}
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {items.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-muted-foreground space-y-2">
-              <ShoppingCart className="h-12 w-12 opacity-20" />
-              <p>Keranjang kosong</p>
+      {/* Mobile Cart Bottom Sheet */}
+      {isMobile && showCart && (
+        <>
+          {/* Overlay */}
+          <div
+            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowCart(false)}
+            aria-hidden="true"
+          />
+          {/* Bottom Sheet */}
+          <div className="fixed bottom-0 left-0 right-0 z-50 bg-card rounded-t-2xl shadow-2xl flex flex-col max-h-[85vh] animate-in slide-in-from-bottom duration-300">
+            {/* Drag handle */}
+            <div className="flex justify-center py-2">
+              <div className="w-10 h-1 bg-muted-foreground/30 rounded-full" />
             </div>
-          ) : (
-            items.map((item) => (
-              <div
-                key={item.id}
-                className="flex gap-4 items-start animate-in slide-in-from-right-2 duration-300"
-              >
-                <div className="h-12 w-12 rounded-md flex items-center justify-center shrink-0 text-sm font-bold bg-muted">
-                  {getInitials(item.name)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-medium truncate">{item.name}</h4>
-                  <p className="text-sm text-blue-600 dark:text-blue-400 font-semibold">
-                    Rp {item.price.toLocaleString()}
-                  </p>
-                  <div className="flex items-center gap-2 mt-2">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-6 w-6"
-                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                    >
-                      <Minus className="h-3 w-3" />
-                    </Button>
-                    <span className="text-sm w-4 text-center">
-                      {item.quantity}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-6 w-6"
-                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                    >
-                      <Plus className="h-3 w-3" />
-                    </Button>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="font-medium text-sm">
-                    Rp {(item.price * item.quantity).toLocaleString()}
-                  </p>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 text-destructive/50 hover:text-destructive mt-2"
-                    onClick={() => removeItem(item.id)}
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-
-        <div className="p-4 bg-muted/30 border-t rounded-b-lg space-y-3">
-          <div className="space-y-1 text-sm">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Subtotal</span>
-              <span>Rp {subtotal().toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">PPN (11%)</span>
-              <span>Rp {tax().toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between text-lg font-bold border-t pt-2 mt-2">
-              <span>Total</span>
-              <span>Rp {total().toLocaleString()}</span>
-            </div>
+            <CartContent compact />
           </div>
-          <Button
-            className="w-full text-lg h-12"
-            size="lg"
-            disabled={items.length === 0}
-            onClick={() => router.push("/pos/checkout")}
-          >
-            Checkout
-          </Button>
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
 }

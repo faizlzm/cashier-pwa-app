@@ -106,3 +106,109 @@ body {
 .dark .glass {
   @apply bg-black/10 backdrop-blur-md border border-white/10 shadow-lg;
 }
+
+/* ================================
+   RESPONSIVE UTILITIES
+   Breakpoints matching Flutter:
+   - mobile: < 600px
+   - tablet: 600px - 1024px
+   - desktop: >= 1024px
+   ================================ */
+
+/* Hide elements on mobile (< 600px) */
+@media (max-width: 599px) {
+  .hide-mobile {
+    display: none !important;
+  }
+}
+
+/* Show only on mobile */
+@media (min-width: 600px) {
+  .show-mobile-only {
+    display: none !important;
+  }
+}
+
+/* Hide on tablet and up */
+@media (min-width: 600px) {
+  .hide-tablet-up {
+    display: none !important;
+  }
+}
+
+/* Touch-friendly minimum sizes (iOS recommends 44px) */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Hide scrollbar but keep functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Mobile-optimized spacing */
+@media (max-width: 599px) {
+  .mobile-p-2 {
+    padding: 0.5rem !important;
+  }
+  .mobile-p-3 {
+    padding: 0.75rem !important;
+  }
+  .mobile-gap-2 {
+    gap: 0.5rem !important;
+  }
+}
+
+/* Safe area insets for mobile browsers */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+/* CSS Order utilities for reordering flex/grid items */
+.order-1 {
+  order: 1;
+}
+.order-2 {
+  order: 2;
+}
+
+@media (min-width: 1024px) {
+  .lg\:order-1 {
+    order: 1;
+  }
+  .lg\:order-2 {
+    order: 2;
+  }
+}
+
+/* Bottom sheet overlay */
+.bottom-sheet-overlay {
+  @apply fixed inset-0 z-50 bg-black/50 backdrop-blur-sm;
+}
+
+/* Bottom sheet container */
+.bottom-sheet {
+  @apply fixed bottom-0 left-0 right-0 z-50 bg-card rounded-t-2xl shadow-2xl;
+  max-height: 85vh;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* Floating action button */
+.fab {
+  @apply fixed bottom-4 left-4 right-4 z-40 bg-primary text-primary-foreground rounded-full py-3.5 px-6 shadow-lg;
+  box-shadow: 0 4px 20px rgba(var(--primary), 0.3);
+}
