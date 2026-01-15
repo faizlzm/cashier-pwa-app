@@ -7,7 +7,10 @@ export default function ResetPage() {
   const [isComplete, setIsComplete] = useState(false);
 
   const addStatus = (msg: string) => {
-    setStatus((prev) => [...prev, `${new Date().toLocaleTimeString()}: ${msg}`]);
+    setStatus((prev) => [
+      ...prev,
+      `${new Date().toLocaleTimeString()}: ${msg}`,
+    ]);
   };
 
   const resetAll = async () => {
@@ -18,7 +21,7 @@ export default function ResetPage() {
       if ("serviceWorker" in navigator) {
         const registrations = await navigator.serviceWorker.getRegistrations();
         addStatus(`📋 Ditemukan ${registrations.length} Service Worker`);
-        
+
         for (const registration of registrations) {
           await registration.unregister();
           addStatus(`✅ Unregistered: ${registration.scope}`);
@@ -33,7 +36,7 @@ export default function ResetPage() {
       if ("caches" in window) {
         const cacheNames = await caches.keys();
         addStatus(`📦 Ditemukan ${cacheNames.length} cache(s)`);
-        
+
         for (const cacheName of cacheNames) {
           await caches.delete(cacheName);
           addStatus(`✅ Deleted cache: ${cacheName}`);
@@ -47,7 +50,7 @@ export default function ResetPage() {
     try {
       const databases = await indexedDB.databases();
       addStatus(`💾 Ditemukan ${databases.length} IndexedDB`);
-      
+
       for (const db of databases) {
         if (db.name) {
           indexedDB.deleteDatabase(db.name);
@@ -100,7 +103,7 @@ export default function ResetPage() {
         <h1 className="text-2xl font-bold text-center mb-4 text-indigo-600">
           🔄 PWA Reset Tool
         </h1>
-        
+
         <div className="bg-gray-900 rounded-lg p-4 mb-4 h-64 overflow-y-auto font-mono text-sm">
           {status.map((s, i) => (
             <div key={i} className="text-green-400 mb-1">
@@ -108,9 +111,7 @@ export default function ResetPage() {
             </div>
           ))}
           {!isComplete && (
-            <div className="text-yellow-400 animate-pulse">
-              Processing...
-            </div>
+            <div className="text-yellow-400 animate-pulse">Processing...</div>
           )}
         </div>
 
@@ -120,6 +121,15 @@ export default function ResetPage() {
             className="block w-full bg-indigo-600 text-white text-center py-3 rounded-lg font-semibold hover:bg-indigo-700 transition"
           >
             ➡️ Ke Halaman Login
+          </a>
+        )}
+
+        {!isComplete && (
+          <a
+            href="/login"
+            className="block w-full bg-gray-500 text-white text-center py-3 rounded-lg font-semibold hover:bg-gray-600 transition"
+          >
+            ⏭️ Skip - Langsung ke Login
           </a>
         )}
 
