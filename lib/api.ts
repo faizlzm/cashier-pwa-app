@@ -1,7 +1,8 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 
+// Use production API as default fallback (for Vercel deployment)
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
+  process.env.NEXT_PUBLIC_API_URL || "https://cashier-api.faizlzm.com/api";
 
 // Token management
 const TOKEN_KEY = "cashier_access_token";
