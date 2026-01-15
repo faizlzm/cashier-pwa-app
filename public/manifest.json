@@ -4,7 +4,7 @@
   "description": "Aplikasi Kasir PWA untuk keperluan riset skripsi",
   "start_url": "/dashboard",
   "display": "standalone",
-  "orientation": "landscape",
+  "orientation": "any",
   "background_color": "#ffffff",
   "theme_color": "#0f172a",
   "scope": "/",
