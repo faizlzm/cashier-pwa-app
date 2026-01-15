@@ -63,7 +63,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       pathname?.startsWith("/register") ||
       pathname?.startsWith("/forgot-password");
 
-    if (!isAuthenticated && !isAuthPage && pathname !== "/") {
+    // Public pages that don't require authentication
+    const isPublicPage =
+      pathname?.startsWith("/diagnostic") || pathname?.startsWith("/reset");
+
+    if (!isAuthenticated && !isAuthPage && !isPublicPage && pathname !== "/") {
       router.push("/login");
     }
 
