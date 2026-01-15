@@ -2,7 +2,7 @@
 
 import { useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { CheckCircle2, Printer, ArrowRight } from "lucide-react";
+import { CheckCircle2, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardFooter } from "@/components/ui/Card";
 import { useCartStore } from "@/store/cart";
@@ -66,9 +66,7 @@ function SuccessContent() {
         </div>
       </CardContent>
       <CardFooter className="flex flex-col gap-3 pb-8 px-8">
-        <Button className="w-full h-12 text-lg" variant="outline">
-          <Printer className="mr-2 h-5 w-5" /> Cetak Struk
-        </Button>
+        {/* Print receipt feature removed */}
         <Button
           className="w-full h-12 text-lg"
           onClick={() => router.push("/pos")}
