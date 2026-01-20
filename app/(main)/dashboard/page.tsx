@@ -24,15 +24,8 @@ import { Badge } from "@/components/ui/Badge";
 import { getTodayTransactions } from "@/lib/api/transactions";
 import { getProducts } from "@/lib/api/products";
 import { useAuth } from "@/lib/context/auth-context";
-import { cn } from "@/lib/utils";
-import type { Transaction, Product } from "@/types/api";
-
-// Helper for initials
-function getInitials(name: string) {
-  const words = name.trim().split(/\s+/);
-  if (words.length === 1) return words[0].substring(0, 2).toUpperCase();
-  return (words[0][0] + words[1][0]).toUpperCase();
-}
+import { cn, getInitials } from "@/lib/utils";
+import type { Transaction } from "@/types/api";
 
 interface DashboardData {
   todayRevenue: number;

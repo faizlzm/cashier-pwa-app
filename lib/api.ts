@@ -1,34 +1,62 @@
+/**
+ * @fileoverview Konfigurasi Axios dan manajemen token autentikasi
+ * @module lib/api
+ */
+
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 
-// Use production API as default fallback (for Vercel deployment)
+/**
+ * Base URL untuk API backend
+ * Default menggunakan production URL jika environment variable tidak tersedia
+ */
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "https://cashier-api.faizlzm.com/api";
 
-// Token management
+// Token keys untuk localStorage
 const TOKEN_KEY = "cashier_access_token";
 const REFRESH_TOKEN_KEY = "cashier_refresh_token";
 
+/**
+ * Mengambil access token dari localStorage
+ * @returns Access token atau null jika tidak ada atau di server-side
+ */
 export const getAccessToken = (): string | null => {
   if (typeof window === "undefined") return null;
   return localStorage.getItem(TOKEN_KEY);
 };
 
+/**
+ * Mengambil refresh token dari localStorage
+ * @returns Refresh token atau null jika tidak ada atau di server-side
+ */
 export const getRefreshToken = (): string | null => {
   if (typeof window === "undefined") return null;
   return localStorage.getItem(REFRESH_TOKEN_KEY);
 };
 
+/**
+ * Menyimpan access token dan refresh token ke localStorage
+ * @param accessToken - JWT access token
+ * @param refreshToken - JWT refresh token
+ */
 export const setTokens = (accessToken: string, refreshToken: string): void => {
   localStorage.setItem(TOKEN_KEY, accessToken);
   localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
 };
 
+/**
+ * Menghapus semua token dari localStorage (untuk logout)
+ */
 export const clearTokens = (): void => {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(REFRESH_TOKEN_KEY);
 };
 
-// Create axios instance
+/**
+ * Instance Axios yang sudah dikonfigurasi dengan base URL dan interceptors
+ * - Request interceptor: Menambahkan Authorization header secara otomatis
+ * - Response interceptor: Handle 401 error dengan token refresh otomatis
+ */
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -45,7 +73,7 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 // Response interceptor - handle 401 and token refresh
@@ -118,7 +146,7 @@ api.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 export default api;

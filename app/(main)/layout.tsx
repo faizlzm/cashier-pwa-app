@@ -7,7 +7,6 @@ import { NetworkStatusBar } from "@/components/ui/NetworkStatusBar";
 import { PWAUpdatePrompt } from "@/components/ui/PWAUpdatePrompt";
 import { NetworkStatusProvider } from "@/lib/context/network-status";
 import { useAuth } from "@/lib/context/auth-context";
-import { useResponsive } from "@/hooks/useResponsive";
 import { Loader2 } from "lucide-react";
 
 export default function MainLayout({
@@ -16,7 +15,6 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   const { isLoading, isAuthenticated } = useAuth();
-  const { isMobile } = useResponsive();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Show loading state while checking auth

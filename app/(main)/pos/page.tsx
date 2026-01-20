@@ -18,25 +18,8 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { useResponsive } from "@/hooks/useResponsive";
-import { cn } from "@/lib/utils";
+import { cn, getInitials, getProductColor } from "@/lib/utils";
 import type { Product, Category } from "@/types/api";
-
-// Helper for initials
-function getInitials(name: string) {
-  const words = name.trim().split(/\s+/);
-  if (words.length === 1) return words[0].substring(0, 2).toUpperCase();
-  return (words[0][0] + words[1][0]).toUpperCase();
-}
-
-// Helper for product color
-function getProductColor(name: string) {
-  const hue =
-    Math.abs(name.split("").reduce((a, b) => a + b.charCodeAt(0), 0)) % 360;
-  return {
-    bg: `hsl(${hue}, 70%, 90%)`,
-    text: `hsl(${hue}, 80%, 30%)`,
-  };
-}
 
 export default function POSPage() {
   const router = useRouter();
@@ -108,7 +91,7 @@ export default function POSPage() {
       <div
         className={cn(
           "flex justify-between items-center bg-muted/30",
-          compact ? "p-3 border-b" : "p-4 border-b rounded-t-lg"
+          compact ? "p-3 border-b" : "p-4 border-b rounded-t-lg",
         )}
       >
         <div className="flex items-center gap-2">
@@ -146,7 +129,7 @@ export default function POSPage() {
       <div
         className={cn(
           "flex-1 overflow-y-auto space-y-3",
-          compact ? "p-3" : "p-4"
+          compact ? "p-3" : "p-4",
         )}
       >
         {items.length === 0 ? (
@@ -163,7 +146,7 @@ export default function POSPage() {
               <div
                 className={cn(
                   "rounded-md flex items-center justify-center shrink-0 text-xs font-bold bg-muted",
-                  compact ? "h-10 w-10" : "h-12 w-12"
+                  compact ? "h-10 w-10" : "h-12 w-12",
                 )}
               >
                 {getInitials(item.name)}
@@ -221,7 +204,7 @@ export default function POSPage() {
       <div
         className={cn(
           "bg-muted/30 border-t space-y-2 safe-bottom",
-          compact ? "p-3" : "p-4 rounded-b-lg"
+          compact ? "p-3" : "p-4 rounded-b-lg",
         )}
       >
         <div className="space-y-1 text-sm">
@@ -256,7 +239,7 @@ export default function POSPage() {
         "flex gap-2 sm:gap-4",
         isMobile
           ? "flex-col h-[calc(100vh-8rem)]"
-          : "flex-row h-[calc(100vh-6rem)]"
+          : "flex-row h-[calc(100vh-6rem)]",
       )}
     >
       {/* Product List Section */}
@@ -301,7 +284,7 @@ export default function POSPage() {
         <div
           className={cn(
             "flex-1 overflow-y-auto space-y-2 sm:space-y-3 min-h-0",
-            isMobile ? "pb-20" : "pr-2 pb-2"
+            isMobile ? "pb-20" : "pr-2 pb-2",
           )}
         >
           {isLoading ? (
@@ -333,14 +316,14 @@ export default function POSPage() {
                   key={product.id}
                   className={cn(
                     "cursor-pointer hover:border-primary transition-all group overflow-hidden flex items-center gap-3",
-                    isMobile ? "p-2.5" : "p-3 gap-4"
+                    isMobile ? "p-2.5" : "p-3 gap-4",
                   )}
                   onClick={() => handleAddItem(product)}
                 >
                   <div
                     className={cn(
                       "rounded-lg flex items-center justify-center font-bold shrink-0",
-                      isMobile ? "h-12 w-12 text-base" : "h-14 w-14 text-lg"
+                      isMobile ? "h-12 w-12 text-base" : "h-14 w-14 text-lg",
                     )}
                     style={{ backgroundColor: colors.bg, color: colors.text }}
                   >
@@ -351,7 +334,7 @@ export default function POSPage() {
                     <h3
                       className={cn(
                         "font-medium text-slate-950 dark:text-slate-100 truncate",
-                        isMobile ? "text-base" : "text-lg"
+                        isMobile ? "text-base" : "text-lg",
                       )}
                     >
                       {product.name}
@@ -374,7 +357,7 @@ export default function POSPage() {
                       "rounded-full transition-opacity shrink-0",
                       isMobile
                         ? "h-9 w-9 opacity-100"
-                        : "h-10 w-10 opacity-0 group-hover:opacity-100"
+                        : "h-10 w-10 opacity-0 group-hover:opacity-100",
                     )}
                   >
                     <Plus className={isMobile ? "h-5 w-5" : "h-6 w-6"} />

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { WifiOff, RefreshCw, CloudOff, Loader2 } from "lucide-react";
-import { useNetworkStatus } from "@/hooks/use-network-status";
+import { useNetworkStatus } from "@/lib/context/network-status";
 import { cn } from "@/lib/utils";
 
 export function NetworkStatusBar() {
@@ -38,8 +38,8 @@ export function NetworkStatusBar() {
         !isOnline
           ? "bg-amber-500 text-amber-950"
           : pendingCount > 0
-          ? "bg-blue-500 text-white"
-          : "bg-green-500 text-white"
+            ? "bg-blue-500 text-white"
+            : "bg-green-500 text-white",
       )}
     >
       {!isOnline ? (

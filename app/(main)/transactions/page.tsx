@@ -18,25 +18,8 @@ import { Card, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { getTransactions } from "@/lib/api/transactions";
 import { useResponsive } from "@/hooks/useResponsive";
-import { cn } from "@/lib/utils";
+import { cn, getInitials, getProductColor } from "@/lib/utils";
 import type { Transaction } from "@/types/api";
-
-// Helper for initials
-function getInitials(name: string) {
-  const words = name.trim().split(/\s+/);
-  if (words.length === 1) return words[0].substring(0, 2).toUpperCase();
-  return (words[0][0] + words[1][0]).toUpperCase();
-}
-
-// Helper for product color
-function getProductColor(name: string) {
-  const hue =
-    Math.abs(name.split("").reduce((a, b) => a + b.charCodeAt(0), 0)) % 360;
-  return {
-    bg: `hsl(${hue}, 70%, 90%)`,
-    text: `hsl(${hue}, 80%, 30%)`,
-  };
-}
 
 export default function TransactionsPage() {
   const { isMobile } = useResponsive();
@@ -65,7 +48,7 @@ export default function TransactionsPage() {
   }, []);
 
   const filtered = transactions.filter((t) =>
-    t.transactionCode.toLowerCase().includes(search.toLowerCase())
+    t.transactionCode.toLowerCase().includes(search.toLowerCase()),
   );
 
   // Mobile Transaction Card Component
@@ -112,15 +95,15 @@ export default function TransactionsPage() {
                   trx.status === "PAID"
                     ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800"
                     : trx.status === "CANCELLED"
-                    ? "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400"
-                    : "bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400"
+                      ? "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400"
+                      : "bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400",
                 )}
               >
                 {trx.status === "PAID"
                   ? "Lunas"
                   : trx.status === "CANCELLED"
-                  ? "Batal"
-                  : "Pending"}
+                    ? "Batal"
+                    : "Pending"}
               </Badge>
             </div>
 
@@ -270,7 +253,7 @@ export default function TransactionsPage() {
                                     "d MMM yyyy",
                                     {
                                       locale: idLocale,
-                                    }
+                                    },
                                   )}
                                 </span>
                                 <span className="text-xs text-muted-foreground">
@@ -326,15 +309,15 @@ export default function TransactionsPage() {
                                   trx.status === "PAID"
                                     ? "bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
                                     : trx.status === "CANCELLED"
-                                    ? "bg-red-50 text-red-700 border-red-200"
-                                    : "bg-yellow-50 text-yellow-700 border-yellow-200"
+                                      ? "bg-red-50 text-red-700 border-red-200"
+                                      : "bg-yellow-50 text-yellow-700 border-yellow-200",
                                 )}
                               >
                                 {trx.status === "PAID"
                                   ? "Lunas"
                                   : trx.status === "CANCELLED"
-                                  ? "Batal"
-                                  : "Pending"}
+                                    ? "Batal"
+                                    : "Pending"}
                               </Badge>
                             </td>
                             <td className="p-4 px-6 align-middle text-right">
