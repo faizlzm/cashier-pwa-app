@@ -12,6 +12,8 @@ import {
   Trash2,
   Check,
   Loader2,
+  Building2,
+  Pencil,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import {
@@ -28,9 +30,16 @@ import {
   clearAllOfflineData,
   getOfflineStats,
 } from "@/lib/offline/offline-store";
+import {
+  getBusinessSettings,
+  updateBusinessSettings,
+} from "@/lib/api/settings";
+import { useCartStore } from "@/store/cart";
 
 export default function SettingsPage() {
   const { user, logout } = useAuth();
+  const setStoreTaxRate = useCartStore((state) => state.setTaxRate);
+
   const [isDark, setIsDark] = useState(false);
   const [updateAvailable, setUpdateAvailable] = useState(false);
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
@@ -42,6 +51,63 @@ export default function SettingsPage() {
   } | null>(null);
   const [registration, setRegistration] =
     useState<ServiceWorkerRegistration | null>(null);
+
+  // Business Settings State
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+  const [isEditingBusiness, setIsEditingBusiness] = useState(false);
+  const [businessSettings, setBusinessSettings] = useState({
+    businessName: "",
+    address: "",
+    taxRate: 11,
+  });
+  // Backup state for cancel
+  const [originalSettings, setOriginalSettings] = useState({
+    businessName: "",
+    address: "",
+    taxRate: 11,
+  });
+
+  const loadSettings = async () => {
+    try {
+      const settings = await getBusinessSettings();
+      const data = {
+        businessName: settings.businessName || "",
+        address: settings.address || "",
+        taxRate: settings.taxRate,
+      };
+      setBusinessSettings(data);
+      setOriginalSettings(data);
+      // Sync store tax rate
+      setStoreTaxRate(settings.taxRate);
+    } catch (error) {
+      console.error("Failed to load business settings:", error);
+    }
+  };
+
+  const handleSaveSettings = async () => {
+    setIsSavingSettings(true);
+    try {
+      const updated = await updateBusinessSettings({
+        businessName: businessSettings.businessName,
+        address: businessSettings.address,
+        taxRate: businessSettings.taxRate,
+      });
+      setStoreTaxRate(updated.taxRate);
+      setOriginalSettings(businessSettings);
+      setIsEditingBusiness(false);
+      // Optional: Show success toast/alert
+    } catch (error) {
+      console.error("Failed to save settings:", error);
+      // Optional: Show error toast/alert
+    } finally {
+      setIsSavingSettings(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setBusinessSettings(originalSettings);
+    setIsEditingBusiness(false);
+  };
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -58,8 +124,9 @@ export default function SettingsPage() {
         });
       }
 
-      // Load offline stats
+      // Load offline stats & business settings
       getOfflineStats().then(setOfflineStats);
+      loadSettings();
     }
   }, []);
 
@@ -147,6 +214,116 @@ export default function SettingsPage() {
               <Input value={user?.email || ""} readOnly className="bg-muted" />
             </div>
             <div className="space-y-2"></div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <div className="space-y-1">
+            <CardTitle className="flex items-center gap-2">
+              <Building2 className="h-5 w-5" /> Pengaturan Bisnis
+            </CardTitle>
+            <CardDescription>
+              Kelola informasi toko dan tarif pajak
+            </CardDescription>
+          </div>
+          {!isEditingBusiness && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsEditingBusiness(true)}
+            >
+              <Pencil className="h-4 w-4 mr-2" />
+              Ubah
+            </Button>
+          )}
+        </CardHeader>
+        <CardContent className="space-y-4 pt-4">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Nama Toko</label>
+              <Input
+                value={businessSettings.businessName}
+                onChange={(e) =>
+                  setBusinessSettings({
+                    ...businessSettings,
+                    businessName: e.target.value,
+                  })
+                }
+                disabled={!isEditingBusiness}
+                className={!isEditingBusiness ? "bg-muted" : ""}
+                placeholder="Contoh: Toko Kopi Senja"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Alamat</label>
+              <textarea
+                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-muted"
+                value={businessSettings.address}
+                onChange={(e) =>
+                  setBusinessSettings({
+                    ...businessSettings,
+                    address: e.target.value,
+                  })
+                }
+                disabled={!isEditingBusiness}
+                placeholder="Alamat lengkap toko"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">
+                Tarif Pajak (%)
+                <span className="text-xs font-normal text-muted-foreground ml-2">
+                  (0 = Bebas Pajak)
+                </span>
+              </label>
+              <Input
+                type="number"
+                min="0"
+                step="0.1"
+                value={businessSettings.taxRate}
+                onChange={(e) =>
+                  setBusinessSettings({
+                    ...businessSettings,
+                    taxRate: Math.max(
+                      0,
+                      Number.parseFloat(e.target.value) || 0,
+                    ),
+                  })
+                }
+                disabled={!isEditingBusiness}
+                className={!isEditingBusiness ? "bg-muted" : ""}
+              />
+            </div>
+
+            {isEditingBusiness && (
+              <div className="flex justify-end pt-2 gap-2">
+                <Button
+                  variant="ghost"
+                  onClick={handleCancelEdit}
+                  disabled={isSavingSettings}
+                >
+                  Batal
+                </Button>
+                <Button
+                  onClick={handleSaveSettings}
+                  disabled={isSavingSettings}
+                >
+                  {isSavingSettings ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Menyimpan...
+                    </>
+                  ) : (
+                    <>
+                      <Check className="mr-2 h-4 w-4" />
+                      Simpan Perubahan
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

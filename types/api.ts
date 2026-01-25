@@ -160,3 +160,20 @@ export interface DashboardSummary {
   lowStockProducts: number;
   recentTransactions: Transaction[];
 }
+
+// Business Settings Types
+export interface BusinessSettings {
+  id?: string;
+  businessName: string | null;
+  address: string | null;
+  phone: string | null;
+  taxRate: number;
+  updatedAt?: string;
+}
+
+export interface UpdateBusinessSettingsRequest {
+  businessName?: string;
+  address?: string;
+  phone?: string;
+  taxRate?: number;
+}

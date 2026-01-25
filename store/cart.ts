@@ -39,6 +39,10 @@ export interface CartItem extends CartProduct {
  * Berisi state dan actions untuk manipulasi keranjang
  */
 interface CartState {
+  /** Tarif pajak dalam persen (default 11) */
+  taxRate: number;
+  /** Mengatur tarif pajak */
+  setTaxRate: (rate: number) => void;
   /** Daftar item dalam keranjang */
   items: CartItem[];
   /** Menambahkan produk ke keranjang (increment jika sudah ada) */
@@ -51,7 +55,7 @@ interface CartState {
   clearCart: () => void;
   /** Menghitung subtotal (sebelum pajak dan diskon) */
   subtotal: () => number;
-  /** Menghitung pajak (PPN 11%) */
+  /** Menghitung pajak (berdasarkan taxRate) */
   tax: () => number;
   /** Menghitung diskon (saat ini 0%) */
   discount: () => number;
@@ -62,6 +66,8 @@ interface CartState {
 export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
+      taxRate: 11, // Default 11% if not set
+      setTaxRate: (rate) => set({ taxRate: rate }),
       items: [],
       addItem: (product) => {
         const { items } = get();
@@ -96,7 +102,7 @@ export const useCartStore = create<CartState>()(
       subtotal: () =>
         get().items.reduce((acc, item) => acc + item.price * item.quantity, 0),
       discount: () => get().subtotal() * 0.0, // 0% placeholder for now
-      tax: () => (get().subtotal() - get().discount()) * 0.11, // 11% PPN
+      tax: () => (get().subtotal() - get().discount()) * (get().taxRate / 100),
       total: () => get().subtotal() - get().discount() + get().tax(),
     }),
     {

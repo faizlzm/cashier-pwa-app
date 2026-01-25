@@ -213,7 +213,9 @@ export default function POSPage() {
             <span>Rp {subtotal().toLocaleString()}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-muted-foreground">PPN (11%)</span>
+            <span className="text-muted-foreground">
+              PPN ({useCartStore((state) => state.taxRate)}%)
+            </span>
             <span>Rp {tax().toLocaleString()}</span>
           </div>
           <div className="flex justify-between text-base font-bold border-t pt-2 mt-2">
