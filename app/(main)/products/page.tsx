@@ -1,9 +1,18 @@
 "use client";
 
 import * as React from "react";
-import { Plus, Search, Package, Loader2 } from "lucide-react";
+import {
+  Plus,
+  Search,
+  Package,
+  Loader2,
+  SlidersHorizontal,
+  X,
+} from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { Badge } from "@/components/ui/Badge";
+import { Modal } from "@/components/ui/Modal";
 import { ProductTable } from "@/components/products/ProductTable";
 import { ProductFormModal } from "@/components/products/ProductFormModal";
 import { DeleteProductDialog } from "@/components/products/DeleteProductDialog";
@@ -29,6 +38,15 @@ export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [categoryFilter, setCategoryFilter] = React.useState<Category | "">("");
   const [statusFilter, setStatusFilter] = React.useState<
+    "all" | "active" | "inactive"
+  >("all");
+
+  // Filter Modal Logic
+  const [isFilterModalOpen, setIsFilterModalOpen] = React.useState(false);
+  const [tempCategoryFilter, setTempCategoryFilter] = React.useState<
+    Category | ""
+  >("");
+  const [tempStatusFilter, setTempStatusFilter] = React.useState<
     "all" | "active" | "inactive"
   >("all");
 
@@ -131,6 +149,27 @@ export default function ProductsPage() {
     setIsDeleteDialogOpen(true);
   };
 
+  // Filter Logic
+  const openFilterModal = () => {
+    setTempCategoryFilter(categoryFilter);
+    setTempStatusFilter(statusFilter);
+    setIsFilterModalOpen(true);
+  };
+
+  const applyFilters = () => {
+    setCategoryFilter(tempCategoryFilter);
+    setStatusFilter(tempStatusFilter);
+    setIsFilterModalOpen(false);
+  };
+
+  const resetFilters = () => {
+    setCategoryFilter("");
+    setStatusFilter("all");
+    setIsFilterModalOpen(false); // Close modal on reset? Or keep open? Consisted with Flutter: Just reset state.
+  };
+
+  const isFilterActive = categoryFilter !== "" || statusFilter !== "all";
+
   return (
     <div className="space-y-4 sm:space-y-6 animate-in fade-in duration-500">
       {/* Header */}
@@ -151,36 +190,80 @@ export default function ProductsPage() {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-          <div className="flex-1 sm:max-w-64">
-            <Input
-              placeholder="Cari produk..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              icon={<Search className="h-4 w-4" />}
-              className="bg-card h-9 sm:h-10 text-sm"
-            />
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-2">
+            <div className="flex-1 relative">
+              <Input
+                placeholder="Cari produk..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                icon={<Search className="h-4 w-4" />}
+                className="bg-card h-9 sm:h-10 text-sm w-full"
+              />
+            </div>
+            <Button
+              variant={isFilterActive ? "default" : "outline"}
+              size="icon"
+              className="shrink-0 h-9 w-9 sm:h-10 sm:w-10 relative"
+              title="Filter Produk"
+              onClick={openFilterModal}
+            >
+              <SlidersHorizontal className="h-4 w-4" />
+              {isFilterActive && (
+                <span className="absolute top-0 right-0 h-2.5 w-2.5 bg-red-500 border-2 border-background rounded-full" />
+              )}
+            </Button>
           </div>
-          <select
-            className="h-9 sm:h-10 px-3 rounded-md border border-input bg-card text-sm"
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value as Category | "")}
-          >
-            <option value="">Semua Kategori</option>
-            <option value="FOOD">Makanan</option>
-            <option value="DRINK">Minuman</option>
-          </select>
-          <select
-            className="h-9 sm:h-10 px-3 rounded-md border border-input bg-card text-sm"
-            value={statusFilter}
-            onChange={(e) =>
-              setStatusFilter(e.target.value as "all" | "active" | "inactive")
-            }
-          >
-            <option value="all">Semua Status</option>
-            <option value="active">Aktif</option>
-            <option value="inactive">Nonaktif</option>
-          </select>
+
+          {/* Active Filter Chips */}
+          {isFilterActive && (
+            <div className="flex flex-wrap gap-2 animate-in fade-in slide-in-from-top-1">
+              {categoryFilter && (
+                <Badge
+                  variant="secondary"
+                  className="pl-2 pr-1 py-1 gap-1 text-xs font-normal"
+                >
+                  <span>
+                    {categoryFilter === "FOOD"
+                      ? "Makanan"
+                      : categoryFilter === "DRINK"
+                        ? "Minuman"
+                        : categoryFilter}
+                  </span>
+                  <button
+                    onClick={() => setCategoryFilter("")}
+                    className="ml-1 hover:bg-background/50 rounded-full p-0.5"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              )}
+              {statusFilter !== "all" && (
+                <Badge
+                  variant="secondary"
+                  className="pl-2 pr-1 py-1 gap-1 text-xs font-normal"
+                >
+                  <span>
+                    {statusFilter === "active" ? "Aktif" : "Nonaktif"}
+                  </span>
+                  <button
+                    onClick={() => setStatusFilter("all")}
+                    className="ml-1 hover:bg-background/50 rounded-full p-0.5"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 text-xs px-2 text-muted-foreground hover:text-foreground"
+                onClick={resetFilters}
+              >
+                Reset Semua
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -209,6 +292,92 @@ export default function ProductsPage() {
           )}
         </>
       )}
+
+      {/* Filter Modal */}
+      <Modal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        title="Filter Produk"
+      >
+        <div className="space-y-6">
+          <div className="flex justify-between items-center -mt-2 mb-2">
+            <span className="text-xs text-muted-foreground">
+              Sesuaikan filter produk
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-auto p-0 text-destructive hover:text-destructive hover:bg-transparent"
+              onClick={() => {
+                setTempCategoryFilter("");
+                setTempStatusFilter("all");
+              }}
+            >
+              Reset
+            </Button>
+          </div>
+
+          {/* Category Section */}
+          <div className="space-y-3">
+            <label className="text-sm font-semibold">Kategori</label>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { label: "Semua", value: "" },
+                { label: "Makanan", value: "FOOD" },
+                { label: "Minuman", value: "DRINK" },
+              ].map((option) => (
+                <Badge
+                  key={option.value}
+                  variant={
+                    tempCategoryFilter === option.value ? "default" : "outline"
+                  }
+                  className="cursor-pointer px-3 py-1.5 hover:opacity-80 transition-opacity"
+                  onClick={() =>
+                    setTempCategoryFilter(option.value as Category | "")
+                  }
+                >
+                  {option.label}
+                </Badge>
+              ))}
+            </div>
+          </div>
+
+          <div className="h-px bg-border/50" />
+
+          {/* Status Section */}
+          <div className="space-y-3">
+            <label className="text-sm font-semibold">Status</label>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { label: "Semua", value: "all" },
+                { label: "Aktif", value: "active" },
+                { label: "Nonaktif", value: "inactive" },
+              ].map((option) => (
+                <Badge
+                  key={option.value}
+                  variant={
+                    tempStatusFilter === option.value ? "default" : "outline"
+                  }
+                  className="cursor-pointer px-3 py-1.5 hover:opacity-80 transition-opacity"
+                  onClick={() =>
+                    setTempStatusFilter(
+                      option.value as "all" | "active" | "inactive",
+                    )
+                  }
+                >
+                  {option.label}
+                </Badge>
+              ))}
+            </div>
+          </div>
+
+          <div className="pt-4">
+            <Button onClick={applyFilters} className="w-full">
+              Terapkan Filter
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       {/* Form Modal */}
       <ProductFormModal
