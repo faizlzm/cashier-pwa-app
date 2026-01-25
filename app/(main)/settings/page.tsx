@@ -15,6 +15,7 @@ import {
   Building2,
   Pencil,
 } from "lucide-react";
+import { Toast } from "@/components/ui/Toast";
 import { Button } from "@/components/ui/Button";
 import {
   Card,
@@ -51,6 +52,16 @@ export default function SettingsPage() {
   } | null>(null);
   const [registration, setRegistration] =
     useState<ServiceWorkerRegistration | null>(null);
+
+  // Toast State
+  const [toast, setToast] = useState<{
+    message: string;
+    type: "success" | "error" | "info";
+  } | null>(null);
+
+  const showToast = (message: string, type: "success" | "error" | "info") => {
+    setToast({ message, type });
+  };
 
   // Business Settings State
   const [isSavingSettings, setIsSavingSettings] = useState(false);
@@ -95,10 +106,10 @@ export default function SettingsPage() {
       setStoreTaxRate(updated.taxRate);
       setOriginalSettings(businessSettings);
       setIsEditingBusiness(false);
-      // Optional: Show success toast/alert
+      showToast("Pengaturan bisnis berhasil disimpan", "success");
     } catch (error) {
       console.error("Failed to save settings:", error);
-      // Optional: Show error toast/alert
+      showToast("Gagal menyimpan pengaturan", "error");
     } finally {
       setIsSavingSettings(false);
     }
@@ -477,6 +488,14 @@ export default function SettingsPage() {
           <LogOut className="mr-2 h-4 w-4" /> Keluar Aplikasi
         </Button>
       </div>
+
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 }
