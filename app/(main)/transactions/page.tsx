@@ -136,9 +136,6 @@ export default function TransactionsPage() {
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
             Riwayat Transaksi
           </h2>
-          <p className="text-muted-foreground text-xs sm:text-sm mt-0.5 sm:mt-1">
-            Pantau semua pemasukan dan detail transaksi toko Anda
-          </p>
         </div>
 
         {/* Search & Filter */}

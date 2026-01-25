@@ -135,14 +135,7 @@ export default function LoginPage() {
               Masuk
             </Button>
 
-            <div className="flex items-center justify-between text-sm pt-2">
-              <Link
-                href="/forgot-password"
-                className="text-slate-500 hover:text-blue-800 transition-colors"
-              >
-                Lupa Password?
-              </Link>
-            </div>
+            <div className="flex items-center justify-between text-sm pt-2"></div>
           </form>
         </CardContent>
       </Card>

@@ -160,9 +160,6 @@ export default function DashboardPage() {
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
             Dashboard
           </h2>
-          <p className="text-muted-foreground text-xs sm:text-sm mt-0.5 sm:mt-1">
-            Ringkasan aktivitas bisnis Anda hari ini
-          </p>
         </div>
         <div className="flex items-center gap-2 bg-card border px-3 sm:px-4 py-1.5 sm:py-2 rounded-full shadow-sm self-start sm:self-auto">
           <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" />

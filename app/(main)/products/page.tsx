@@ -140,9 +140,6 @@ export default function ProductsPage() {
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
               Manajemen Produk
             </h2>
-            <p className="text-muted-foreground text-xs sm:text-sm mt-0.5 sm:mt-1">
-              Kelola daftar produk, harga, dan stok
-            </p>
           </div>
           <Button
             onClick={openCreateModal}
