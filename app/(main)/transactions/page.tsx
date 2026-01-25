@@ -35,36 +35,27 @@ export default function TransactionsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Filter States
-  const [isDateFilterOpen, setIsDateFilterOpen] = useState(false);
-  const [isStatusFilterOpen, setIsStatusFilterOpen] = useState(false);
-  
+  // Unified Filter State
   const [activeFilters, setActiveFilters] = useState<TransactionFilters>({
     limit: 50,
   });
 
-  // Temporary filter states for modals
-  const [tempDateFilter, setTempDateFilter] = useState<{
-    startDate: string;
-    endDate: string;
-  }>({ startDate: "", endDate: "" });
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [tempFilters, setTempFilters] = useState<TransactionFilters>({});
 
-  const [tempStatusFilter, setTempStatusFilter] = useState<{
-    status?: PaymentStatus;
-    paymentMethod?: PaymentMethod;
-  }>({});
+  // Sync active filters to temp filters when opening modal
+  useEffect(() => {
+    if (isFilterOpen) {
+      setTempFilters({ ...activeFilters });
+    }
+  }, [isFilterOpen, activeFilters]);
 
   // Fetch transactions from API
   const fetchTransactions = async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const filters: TransactionFilters = { ...activeFilters };
-      if (activeFilters.startDate && activeFilters.startDate === activeFilters.endDate) {
-        // If same day, maybe handle differently if needed, but API handles range
-      }
-      
-      const { data } = await getTransactions(filters);
+      const { data } = await getTransactions(activeFilters);
       setTransactions(data);
     } catch (err) {
       console.error("Failed to fetch transactions:", err);
@@ -78,75 +69,38 @@ export default function TransactionsPage() {
     fetchTransactions();
   }, [activeFilters]);
 
-  // Handle Search Client-side (since API doesn't support search by code yet, or as per original implementation)
-  // Optimization: Ideally search should be server-side if list is long
-  const filtered = transactions.filter((t) =>
-    t.transactionCode.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const applyDateFilter = () => {
-    setActiveFilters((prev) => ({
-      ...prev,
-      startDate: tempDateFilter.startDate || undefined,
-      endDate: tempDateFilter.endDate || undefined,
-    }));
-    setIsDateFilterOpen(false);
+  // Handler for applying all filters
+  const applyFilters = () => {
+    setActiveFilters({ ...tempFilters });
+    setIsFilterOpen(false);
   };
 
-  const resetDateFilter = () => {
-    setTempDateFilter({ startDate: "", endDate: "" });
-    setActiveFilters((prev) => {
-      const newFilters = { ...prev };
-      delete newFilters.startDate;
-      delete newFilters.endDate;
-      return newFilters;
-    });
-    setIsDateFilterOpen(false);
+  // Handler for resetting specific filter types
+  const resetFilters = () => {
+    setTempFilters({});
+    setIsFilterOpen(false); // Close modal, user can re-open or we can keep open.
+    // UX decision: Resetting inside modal usually just clears inputs.
+    // If we want "Reset Everything" action:
+    setTempFilters({});
   };
 
-  const applyStatusFilter = () => {
-    setActiveFilters((prev) => ({
-      ...prev,
-      status: tempStatusFilter.status,
-      paymentMethod: tempStatusFilter.paymentMethod,
-    }));
-    setIsStatusFilterOpen(false);
-  };
-
-  const resetStatusFilter = () => {
-    setTempStatusFilter({});
-    setActiveFilters((prev) => {
-      const newFilters = { ...prev };
-      delete newFilters.status;
-      delete newFilters.paymentMethod;
-      return newFilters;
-    });
-    setIsStatusFilterOpen(false);
+  const removeFilterRaw = (key: keyof TransactionFilters) => {
+    const newFilters = { ...activeFilters };
+    delete newFilters[key];
+    setActiveFilters(newFilters);
   };
 
   // Check if filters are active
-  const isDateActive = !!activeFilters.startDate || !!activeFilters.endDate;
-  const isStatusActive = !!activeFilters.status || !!activeFilters.paymentMethod;
+  const isFilterActive =
+    !!activeFilters.startDate ||
+    !!activeFilters.endDate ||
+    !!activeFilters.status ||
+    !!activeFilters.paymentMethod;
 
-  // Sync temp states when opening modals
-  useEffect(() => {
-    if (isDateFilterOpen) {
-      setTempDateFilter({
-        startDate: activeFilters.startDate || "",
-        endDate: activeFilters.endDate || "",
-      });
-    }
-  }, [isDateFilterOpen, activeFilters]);
-
-  useEffect(() => {
-    if (isStatusFilterOpen) {
-      setTempStatusFilter({
-        status: activeFilters.status,
-        paymentMethod: activeFilters.paymentMethod,
-      });
-    }
-  }, [isStatusFilterOpen, activeFilters]);
-
+  // Search Logic
+  const filtered = transactions.filter((t) =>
+    t.transactionCode.toLowerCase().includes(search.toLowerCase()),
+  );
 
   // Mobile Transaction Card Component
   const MobileTransactionCard = ({ trx }: { trx: Transaction }) => {
@@ -192,15 +146,15 @@ export default function TransactionsPage() {
                   trx.status === "PAID"
                     ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800"
                     : trx.status === "CANCELLED"
-                    ? "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400"
-                    : "bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400",
+                      ? "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400"
+                      : "bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400",
                 )}
               >
                 {trx.status === "PAID"
                   ? "Lunas"
                   : trx.status === "CANCELLED"
-                  ? "Batal"
-                  : "Pending"}
+                    ? "Batal"
+                    : "Pending"}
               </Badge>
             </div>
 
@@ -247,122 +201,235 @@ export default function TransactionsPage() {
             />
           </div>
           <Button
-            variant={isDateActive ? "default" : "outline"}
+            variant={isFilterActive ? "default" : "outline"}
             size="icon"
             className="shrink-0 h-9 w-9 sm:h-10 sm:w-10 relative"
-            title="Filter Tanggal"
-            onClick={() => setIsDateFilterOpen(true)}
-          >
-            <Calendar className="h-4 w-4" />
-            {isDateActive && (
-              <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full border-2 border-background" />
-            )}
-          </Button>
-          <Button
-            variant={isStatusActive ? "default" : "outline"}
-            size="icon"
-            className="shrink-0 h-9 w-9 sm:h-10 sm:w-10 relative"
-            title="Filter Status"
-            onClick={() => setIsStatusFilterOpen(true)}
+            title="Filter"
+            onClick={() => setIsFilterOpen(true)}
           >
             <Filter className="h-4 w-4" />
-            {isStatusActive && (
+            {isFilterActive && (
               <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full border-2 border-background" />
             )}
           </Button>
         </div>
+
+        {/* Active Filters Chips */}
+        {isFilterActive && (
+          <div className="flex flex-wrap gap-2 animate-in fade-in slide-in-from-top-1">
+            {(activeFilters.startDate || activeFilters.endDate) && (
+              <Badge
+                variant="secondary"
+                className="pl-2 pr-1 py-1 gap-1 text-xs font-normal"
+              >
+                <Calendar className="h-3 w-3 mr-1 opacity-70" />
+                <span>
+                  {activeFilters.startDate
+                    ? format(new Date(activeFilters.startDate), "dd/MM")
+                    : "?"}{" "}
+                  -{" "}
+                  {activeFilters.endDate
+                    ? format(new Date(activeFilters.endDate), "dd/MM")
+                    : "?"}
+                </span>
+                <button
+                  onClick={() => {
+                    const newFilters = { ...activeFilters };
+                    delete newFilters.startDate;
+                    delete newFilters.endDate;
+                    setActiveFilters(newFilters);
+                  }}
+                  className="ml-1 hover:bg-background/50 rounded-full p-0.5"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            )}
+            {activeFilters.status && (
+              <Badge
+                variant="secondary"
+                className="pl-2 pr-1 py-1 gap-1 text-xs font-normal"
+              >
+                <div
+                  className={cn(
+                    "h-2 w-2 rounded-full mr-1",
+                    activeFilters.status === "PAID"
+                      ? "bg-green-500"
+                      : activeFilters.status === "PENDING"
+                        ? "bg-yellow-500"
+                        : "bg-red-500",
+                  )}
+                />
+                <span>
+                  {activeFilters.status === "PAID"
+                    ? "Lunas"
+                    : activeFilters.status === "PENDING"
+                      ? "Pending"
+                      : "Batal"}
+                </span>
+                <button
+                  onClick={() => removeFilterRaw("status")}
+                  className="ml-1 hover:bg-background/50 rounded-full p-0.5"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            )}
+            {activeFilters.paymentMethod && (
+              <Badge
+                variant="secondary"
+                className="pl-2 pr-1 py-1 gap-1 text-xs font-normal"
+              >
+                {activeFilters.paymentMethod === "CASH" ? (
+                  <Banknote className="h-3 w-3 mr-1 opacity-70" />
+                ) : (
+                  <CreditCard className="h-3 w-3 mr-1 opacity-70" />
+                )}
+                <span>{activeFilters.paymentMethod}</span>
+                <button
+                  onClick={() => removeFilterRaw("paymentMethod")}
+                  className="ml-1 hover:bg-background/50 rounded-full p-0.5"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 text-xs px-2 text-muted-foreground hover:text-foreground"
+              onClick={() => setActiveFilters({ limit: activeFilters.limit })}
+            >
+              Reset Semua
+            </Button>
+          </div>
+        )}
       </div>
 
-      {/* Date Filter Modal */}
+      {/* Unified Filter Modal */}
       <Modal
-        isOpen={isDateFilterOpen}
-        onClose={() => setIsDateFilterOpen(false)}
-        title="Filter Tanggal"
+        isOpen={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
+        title="Filter Transaksi"
       >
-        <div className="space-y-4">
-          <div className="grid gap-4">
-            <div className="grid gap-2">
-              <label className="text-sm font-medium">Dari Tanggal</label>
-              <Input
-                type="date"
-                value={tempDateFilter.startDate}
-                onChange={(e) =>
-                  setTempDateFilter({ ...tempDateFilter, startDate: e.target.value })
-                }
-              />
-            </div>
-            <div className="grid gap-2">
-              <label className="text-sm font-medium">Sampai Tanggal</label>
-              <Input
-                type="date"
-                value={tempDateFilter.endDate}
-                onChange={(e) =>
-                  setTempDateFilter({ ...tempDateFilter, endDate: e.target.value })
-                }
-              />
-            </div>
-          </div>
-          <div className="flex gap-2 justify-end pt-2">
-            <Button variant="outline" onClick={resetDateFilter}>
+        <div className="space-y-6">
+          {/* Header with Reset */}
+          <div className="flex justify-between items-center -mt-2 mb-2">
+            <span className="text-xs text-muted-foreground">
+              Sesuaikan filter pencarian
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-auto p-0 text-destructive hover:text-destructive hover:bg-transparent"
+              onClick={() => setTempFilters({})}
+            >
               Reset
             </Button>
-            <Button onClick={applyDateFilter}>Terapkan</Button>
           </div>
-        </div>
-      </Modal>
 
-      {/* Status Filter Modal */}
-      <Modal
-        isOpen={isStatusFilterOpen}
-        onClose={() => setIsStatusFilterOpen(false)}
-        title="Filter Status & Penbayaran"
-      >
-        <div className="space-y-4">
+          {/* Date Section */}
           <div className="space-y-3">
-            <label className="text-sm font-medium">Status Transaksi</label>
+            <label className="text-sm font-semibold flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              Tanggal
+            </label>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-1.5">
+                <label className="text-xs text-muted-foreground">Dari</label>
+                <Input
+                  type="date"
+                  value={tempFilters.startDate || ""}
+                  onChange={(e) =>
+                    setTempFilters({
+                      ...tempFilters,
+                      startDate: e.target.value,
+                    })
+                  }
+                  className="h-9"
+                />
+              </div>
+              <div className="grid gap-1.5">
+                <label className="text-xs text-muted-foreground">Sampai</label>
+                <Input
+                  type="date"
+                  value={tempFilters.endDate || ""}
+                  onChange={(e) =>
+                    setTempFilters({ ...tempFilters, endDate: e.target.value })
+                  }
+                  className="h-9"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="h-px bg-border/50" />
+
+          {/* Status Section */}
+          <div className="space-y-3">
+            <label className="text-sm font-semibold">Status Transaksi</label>
             <div className="flex flex-wrap gap-2">
+              <Badge
+                variant={!tempFilters.status ? "default" : "outline"}
+                className="cursor-pointer px-3 py-1.5"
+                onClick={() => {
+                  const newF = { ...tempFilters };
+                  delete newF.status;
+                  setTempFilters(newF);
+                }}
+              >
+                Semua
+              </Badge>
               {["PAID", "PENDING", "CANCELLED"].map((s) => (
                 <Badge
                   key={s}
-                  variant={tempStatusFilter.status === s ? "default" : "outline"}
-                  className="cursor-pointer"
+                  variant={tempFilters.status === s ? "default" : "outline"}
+                  className="cursor-pointer px-3 py-1.5"
                   onClick={() =>
-                    setTempStatusFilter({
-                      ...tempStatusFilter,
-                      status:
-                        tempStatusFilter.status === s
-                          ? undefined
-                          : (s as PaymentStatus),
+                    setTempFilters({
+                      ...tempFilters,
+                      status: s as PaymentStatus,
                     })
                   }
                 >
                   {s === "PAID"
                     ? "Lunas"
                     : s === "CANCELLED"
-                    ? "Batal"
-                    : "Pending"}
+                      ? "Batal"
+                      : "Pending"}
                 </Badge>
               ))}
             </div>
           </div>
-          
+
+          <div className="h-px bg-border/50" />
+
+          {/* Payment Method Section */}
           <div className="space-y-3">
-            <label className="text-sm font-medium">Metode Pembayaran</label>
+            <label className="text-sm font-semibold">Metode Pembayaran</label>
             <div className="flex flex-wrap gap-2">
+              <Badge
+                variant={!tempFilters.paymentMethod ? "default" : "outline"}
+                className="cursor-pointer px-3 py-1.5"
+                onClick={() => {
+                  const newF = { ...tempFilters };
+                  delete newF.paymentMethod;
+                  setTempFilters(newF);
+                }}
+              >
+                Semua
+              </Badge>
               {["CASH", "QRIS"].map((m) => (
                 <Badge
                   key={m}
                   variant={
-                    tempStatusFilter.paymentMethod === m ? "default" : "outline"
+                    tempFilters.paymentMethod === m ? "default" : "outline"
                   }
-                  className="cursor-pointer"
+                  className="cursor-pointer px-3 py-1.5"
                   onClick={() =>
-                    setTempStatusFilter({
-                      ...tempStatusFilter,
-                      paymentMethod:
-                        tempStatusFilter.paymentMethod === m
-                          ? undefined
-                          : (m as PaymentMethod),
+                    setTempFilters({
+                      ...tempFilters,
+                      paymentMethod: m as PaymentMethod,
                     })
                   }
                 >
@@ -372,11 +439,10 @@ export default function TransactionsPage() {
             </div>
           </div>
 
-          <div className="flex gap-2 justify-end pt-2">
-            <Button variant="outline" onClick={resetStatusFilter}>
-              Reset
+          <div className="pt-4">
+            <Button onClick={applyFilters} className="w-full">
+              Terapkan Filter
             </Button>
-            <Button onClick={applyStatusFilter}>Terapkan</Button>
           </div>
         </div>
       </Modal>
@@ -400,7 +466,7 @@ export default function TransactionsPage() {
             <Archive className="h-6 w-6 opacity-50" />
           </div>
           <p className="font-medium">Tidak ada transaksi ditemukan</p>
-          {(isDateActive || isStatusActive || search) && (
+          {(isFilterActive || search) && (
             <p className="text-sm mt-1">Coba ubah filter pencarian Anda</p>
           )}
         </div>
@@ -550,7 +616,9 @@ export default function TransactionsPage() {
 
           {/* Footer */}
           <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
-            <p>Menampilkan {filtered.length} dari total transaksi yang dimuat</p>
+            <p>
+              Menampilkan {filtered.length} dari total transaksi yang dimuat
+            </p>
             <div className="flex gap-2">
               <Button variant="ghost" size="sm" disabled className="h-8">
                 Sebelumnya
