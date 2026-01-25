@@ -146,10 +146,7 @@ export default function SettingsPage() {
               <label className="text-sm font-medium">Email</label>
               <Input value={user?.email || ""} readOnly className="bg-muted" />
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Role</label>
-              <Input value={user?.role || ""} readOnly className="bg-muted" />
-            </div>
+            <div className="space-y-2"></div>
           </div>
         </CardContent>
       </Card>

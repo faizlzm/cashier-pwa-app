@@ -17,7 +17,7 @@ export interface PaginatedResponse<T> {
 }
 
 // Enums matching Prisma schema
-export type Role = "ADMIN" | "CASHIER";
+export type Role = "ADMIN";
 export type Category = "FOOD" | "DRINK";
 export type PaymentStatus = "PENDING" | "PAID" | "CANCELLED";
 export type PaymentMethod = "CASH" | "QRIS";

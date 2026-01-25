@@ -43,7 +43,7 @@ export function Header({ onMenuClick }: HeaderProps) {
               {user?.name || "User"}
             </p>
             <p className="text-xs text-muted-foreground capitalize">
-              {user?.role?.toLowerCase() || "cashier"}
+              {user?.role?.toLowerCase() || "admin"}
             </p>
           </div>
           <Button
