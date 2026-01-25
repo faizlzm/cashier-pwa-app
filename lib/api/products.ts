@@ -1,5 +1,11 @@
 import api from "@/lib/api";
-import type { ApiResponse, Product, ProductFilters } from "@/types/api";
+import type {
+  ApiResponse,
+  Product,
+  ProductFilters,
+  CreateProductRequest,
+  UpdateProductRequest,
+} from "@/types/api";
 import {
   cacheProducts,
   getCachedProducts,
@@ -7,7 +13,7 @@ import {
 } from "@/lib/offline/offline-store";
 
 export async function getProducts(
-  filters?: ProductFilters
+  filters?: ProductFilters,
 ): Promise<Product[]> {
   const params = new URLSearchParams();
 
@@ -27,7 +33,7 @@ export async function getProducts(
   if (isOnline) {
     try {
       const response = await api.get<ApiResponse<Product[]>>(
-        `/products?${params.toString()}`
+        `/products?${params.toString()}`,
       );
       const products = response.data.data;
 
@@ -59,4 +65,32 @@ export async function getProductById(id: string): Promise<Product> {
 export async function shouldRefreshProducts(): Promise<boolean> {
   const cacheValid = await isProductsCacheValid();
   return !cacheValid;
+}
+
+/**
+ * Create a new product (Admin only)
+ */
+export async function createProduct(
+  data: CreateProductRequest,
+): Promise<Product> {
+  const response = await api.post<ApiResponse<Product>>("/products", data);
+  return response.data.data;
+}
+
+/**
+ * Update an existing product (Admin only)
+ */
+export async function updateProduct(
+  id: string,
+  data: UpdateProductRequest,
+): Promise<Product> {
+  const response = await api.put<ApiResponse<Product>>(`/products/${id}`, data);
+  return response.data.data;
+}
+
+/**
+ * Delete a product (Admin only)
+ */
+export async function deleteProduct(id: string): Promise<void> {
+  await api.delete(`/products/${id}`);
 }

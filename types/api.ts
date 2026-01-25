@@ -74,6 +74,26 @@ export interface ProductFilters {
   isActive?: boolean;
 }
 
+// Product CRUD Request Types
+export interface CreateProductRequest {
+  name: string;
+  price: number;
+  category: Category;
+  imageUrl?: string | null;
+  stock?: number;
+  minStock?: number;
+}
+
+export interface UpdateProductRequest {
+  name?: string;
+  price?: number;
+  category?: Category;
+  imageUrl?: string | null;
+  stock?: number;
+  minStock?: number;
+  isActive?: boolean;
+}
+
 // Transaction Types
 export interface TransactionItem {
   id: string;

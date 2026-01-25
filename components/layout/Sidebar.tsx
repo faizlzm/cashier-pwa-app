@@ -12,6 +12,7 @@ import {
   Moon,
   Sun,
   X,
+  Package,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
@@ -22,6 +23,7 @@ import { useResponsive } from "@/hooks/useResponsive";
 const menuItems = [
   { icon: Home, label: "Home", href: "/dashboard" },
   { icon: ShoppingBag, label: "POS", href: "/pos" },
+  { icon: Package, label: "Produk", href: "/products" },
   { icon: ClipboardList, label: "Riwayat", href: "/transactions" },
   { icon: Settings, label: "Setting", href: "/settings" },
 ];
@@ -89,7 +91,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
           isExpanded ? "w-64" : "w-16",
           // Mobile: Slide in/out animation
           isMobile && !isOpen && "-translate-x-full",
-          isMobile && isOpen && "translate-x-0"
+          isMobile && isOpen && "translate-x-0",
         )}
       >
         {/* Header / Toggle */}
@@ -135,7 +137,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                     isActive
                       ? "bg-primary text-primary-foreground hover:bg-primary/90"
                       : "text-muted-foreground",
-                    !isExpanded && "justify-center"
+                    !isExpanded && "justify-center",
                   )}
                   title={!isExpanded ? item.label : undefined}
                 >
@@ -153,7 +155,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
             variant="ghost"
             className={cn(
               "w-full justify-start touch-target",
-              !isExpanded && "justify-center px-0"
+              !isExpanded && "justify-center px-0",
             )}
             onClick={toggleTheme}
             title={!isExpanded ? "Toggle Theme" : undefined}
@@ -173,7 +175,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
             variant="ghost"
             className={cn(
               "w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10 touch-target",
-              !isExpanded && "justify-center px-0"
+              !isExpanded && "justify-center px-0",
             )}
             onClick={logout}
             title={!isExpanded ? "Logout" : undefined}
