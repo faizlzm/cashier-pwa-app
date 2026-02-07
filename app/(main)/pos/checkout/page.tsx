@@ -105,7 +105,7 @@ export default function CheckoutPage() {
       // Use replace instead of push for better PWA standalone mode compatibility
       // This avoids navigation issues when running as installed PWA
       router.replace(
-        `/pos/success?code=${transaction.transactionCode}&received=${cashReceived}&change=${change}&method=${paymentMethod}`
+        `/pos/success?code=${transaction.transactionCode}&received=${cashReceived}&change=${change}&method=${paymentMethod}`,
       );
     } catch (err) {
       console.error("Transaction failed:", err);
@@ -184,7 +184,7 @@ export default function CheckoutPage() {
                     Math.abs(
                       item.name
                         .split("")
-                        .reduce((a, b) => a + b.charCodeAt(0), 0)
+                        .reduce((a, b) => a + b.charCodeAt(0), 0),
                     ) % 360;
                   const bgColor = `hsl(${hue}, 70%, 90%)`;
                   const textColor = `hsl(${hue}, 80%, 30%)`;
@@ -269,24 +269,26 @@ export default function CheckoutPage() {
 
             <div className="p-3 grid grid-cols-2 gap-2 bg-muted/20 shrink-0">
               <button
+                data-testid="checkout-payment-cash"
                 onClick={() => setPaymentMethod("CASH")}
                 className={cn(
                   "flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-sm font-semibold transition-all duration-200 border-2",
                   paymentMethod === "CASH"
                     ? "bg-white dark:bg-zinc-800 text-primary border-primary/20 shadow-sm"
-                    : "text-muted-foreground border-transparent hover:bg-muted"
+                    : "text-muted-foreground border-transparent hover:bg-muted",
                 )}
               >
                 <Banknote className="w-4 h-4" />
                 Tunai
               </button>
               <button
+                data-testid="checkout-payment-qris"
                 onClick={() => setPaymentMethod("QRIS")}
                 className={cn(
                   "flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-sm font-semibold transition-all duration-200 border-2",
                   paymentMethod === "QRIS"
                     ? "bg-white dark:bg-zinc-800 text-primary border-primary/20 shadow-sm"
-                    : "text-muted-foreground border-transparent hover:bg-muted"
+                    : "text-muted-foreground border-transparent hover:bg-muted",
                 )}
               >
                 <CreditCard className="w-4 h-4" />
@@ -310,6 +312,7 @@ export default function CheckoutPage() {
                       Rp
                     </span>
                     <Input
+                      data-testid="checkout-cash-input"
                       readOnly
                       value={
                         cashReceived > 0 ? cashReceived.toLocaleString() : ""
@@ -331,9 +334,10 @@ export default function CheckoutPage() {
 
                   {/* Quick Suggestions */}
                   <div className="grid grid-cols-4 gap-2 shrink-0">
-                    {getQuickCashOptions().map((amount) => (
+                    {getQuickCashOptions().map((amount, index) => (
                       <button
                         key={amount}
+                        data-testid={`checkout-quick-cash-${index}`}
                         onClick={() => handleQuickCash(amount)}
                         className="py-1.5 px-1 text-xs font-semibold bg-primary/5 text-primary hover:bg-primary/10 rounded-md border border-primary/10 truncate transition-all active:scale-95"
                       >
@@ -349,6 +353,7 @@ export default function CheckoutPage() {
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
                       <button
                         key={num}
+                        data-testid={`checkout-numpad-${num}`}
                         onClick={() => handleNumpad(num.toString())}
                         className="bg-card hover:bg-accent border border-border/60 shadow-sm rounded-xl text-xl font-bold flex items-center justify-center transition-all active:scale-95 active:bg-accent/80"
                       >
@@ -356,18 +361,21 @@ export default function CheckoutPage() {
                       </button>
                     ))}
                     <button
+                      data-testid="checkout-numpad-000"
                       onClick={() => handleNumpad("000")}
                       className="bg-card hover:bg-accent border border-border/60 shadow-sm rounded-xl text-lg font-bold flex items-center justify-center transition-all active:scale-95"
                     >
                       000
                     </button>
                     <button
+                      data-testid="checkout-numpad-0"
                       onClick={() => handleNumpad("0")}
                       className="bg-card hover:bg-accent border border-border/60 shadow-sm rounded-xl text-xl font-bold flex items-center justify-center transition-all active:scale-95"
                     >
                       0
                     </button>
                     <button
+                      data-testid="checkout-numpad-backspace"
                       onClick={() => handleNumpad("backspace")}
                       className="bg-red-50 dark:bg-red-950/20 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30 border border-red-100 dark:border-red-900/50 rounded-xl flex items-center justify-center transition-all active:scale-95"
                     >
@@ -401,7 +409,9 @@ export default function CheckoutPage() {
                   <div
                     className={cn(
                       "text-xl font-bold tabular-nums transition-colors",
-                      change > 0 ? "text-green-600" : "text-muted-foreground/50"
+                      change > 0
+                        ? "text-green-600"
+                        : "text-muted-foreground/50",
                     )}
                   >
                     Rp {change.toLocaleString()}
@@ -409,6 +419,7 @@ export default function CheckoutPage() {
                 </div>
               )}
               <Button
+                data-testid="checkout-pay-button"
                 size="lg"
                 className="w-full h-12 text-lg font-bold shadow-lg shadow-primary/20 rounded-xl"
                 disabled={!isSufficient || isProcessing}
@@ -418,8 +429,8 @@ export default function CheckoutPage() {
                 {isProcessing
                   ? "Memproses..."
                   : paymentMethod === "CASH"
-                  ? `Bayar Rp ${Math.round(totalAmount).toLocaleString()}`
-                  : "Cek Status Pembayaran"}
+                    ? `Bayar Rp ${Math.round(totalAmount).toLocaleString()}`
+                    : "Cek Status Pembayaran"}
               </Button>
             </div>
           </Card>

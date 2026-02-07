@@ -224,6 +224,7 @@ export default function POSPage() {
           </div>
         </div>
         <Button
+          data-testid="pos-checkout-button"
           className="w-full h-11"
           size="lg"
           disabled={items.length === 0}
@@ -250,6 +251,7 @@ export default function POSPage() {
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
           <div className="flex-1">
             <Input
+              data-testid="pos-search-input"
               placeholder="Cari produk..."
               icon={<Search className="h-4 w-4" />}
               value={search}
@@ -259,6 +261,7 @@ export default function POSPage() {
           </div>
           <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-1 scrollbar-hide">
             <Button
+              data-testid="pos-category-all"
               variant={category === "ALL" ? "default" : "outline"}
               onClick={() => setCategory("ALL")}
               className="shrink-0 text-xs sm:text-sm h-9 sm:h-10 px-3 sm:px-4"
@@ -266,6 +269,7 @@ export default function POSPage() {
               Semua
             </Button>
             <Button
+              data-testid="pos-category-food"
               variant={category === "FOOD" ? "default" : "outline"}
               onClick={() => setCategory("FOOD")}
               className="shrink-0 text-xs sm:text-sm h-9 sm:h-10 px-3 sm:px-4"
@@ -273,6 +277,7 @@ export default function POSPage() {
               Makanan
             </Button>
             <Button
+              data-testid="pos-category-drink"
               variant={category === "DRINK" ? "default" : "outline"}
               onClick={() => setCategory("DRINK")}
               className="shrink-0 text-xs sm:text-sm h-9 sm:h-10 px-3 sm:px-4"
@@ -316,6 +321,7 @@ export default function POSPage() {
               return (
                 <Card
                   key={product.id}
+                  data-testid={`pos-product-${product.id}`}
                   className={cn(
                     "cursor-pointer hover:border-primary transition-all group overflow-hidden flex items-center gap-3",
                     isMobile ? "p-2.5" : "p-3 gap-4",
@@ -381,6 +387,7 @@ export default function POSPage() {
       {/* Mobile Floating Cart Button */}
       {isMobile && (
         <button
+          data-testid="pos-cart-button"
           onClick={() => setShowCart(true)}
           className="fixed bottom-4 left-3 right-3 z-40 bg-primary text-primary-foreground rounded-full py-3 px-5 shadow-lg flex items-center justify-between touch-target"
           style={{ boxShadow: "0 4px 20px rgba(59, 130, 246, 0.3)" }}

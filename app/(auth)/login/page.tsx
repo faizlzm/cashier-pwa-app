@@ -83,6 +83,7 @@ export default function LoginPage() {
               </label>
               <Input
                 id="email"
+                data-testid="login-email-input"
                 type="email"
                 placeholder="admin@kasipro.com"
                 required
@@ -104,6 +105,7 @@ export default function LoginPage() {
               <div className="relative">
                 <Input
                   id="password"
+                  data-testid="login-password-input"
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
                   required
@@ -129,6 +131,7 @@ export default function LoginPage() {
 
             <Button
               type="submit"
+              data-testid="login-submit-button"
               className="w-full bg-blue-800 hover:bg-blue-900 h-11"
               isLoading={isLoading}
             >
